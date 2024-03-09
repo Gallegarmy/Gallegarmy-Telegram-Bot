@@ -1,7 +1,7 @@
 from telegram.ext import Updater, CommandHandler, ApplicationBuilder, MessageHandler, filters
 from start import start
 from newmembers import new_members
-from cerveza import cañas
+from cerveza import cerveza
 from help import help
 import tracemalloc
 tracemalloc.start()
@@ -15,7 +15,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
 
     # Add a handler for the /cañas command
-    application.add_handler(CommandHandler("cañas", cañas))
+    application.add_handler(CommandHandler("cañas", cerveza))
 
      # Add a handler for the /cañas command
     application.add_handler(CommandHandler("help", help))

@@ -12,7 +12,7 @@ def first_friday_of_month(year, month):
 
 
 
-async def cañas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get current year and month
     current_year = datetime.now().year
     current_month = datetime.now().month
