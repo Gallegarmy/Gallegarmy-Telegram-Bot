@@ -15,7 +15,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
 
     # Add a handler for the /cañas command
-    application.add_handler(CommandHandler("cañas", cerveza))
+    application.add_handler(CommandHandler("cerveza", cerveza))
 
      # Add a handler for the /cañas command
     application.add_handler(CommandHandler("help", help))
