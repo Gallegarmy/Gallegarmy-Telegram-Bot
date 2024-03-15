@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, Chat
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 import threading
 
@@ -15,5 +15,5 @@ async def new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
     if not update.message:
         chat_id = update.message.chat_id
-        update.chat_member.chat.ban_member(user_id=user_id)
+        Chat.ban_member(chat_id, user_id)
         context.bot.send_message(chat_id, f'O usuario {user_id} non se presentou dentro dos 10 minutos')
