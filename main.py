@@ -24,6 +24,8 @@ def main():
     #Add a handler for the new member entering the chat
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members))
 
+    
+
     #Add a handler for the Pina command
     application.add_handler(CommandHandler("pineapple", pinacolada))
 
