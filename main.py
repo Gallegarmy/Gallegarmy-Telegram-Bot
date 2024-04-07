@@ -8,6 +8,7 @@ import tracemalloc
 tracemalloc.start()
 
 def main():
+    
     # Create an updater object with your bot's token
     application = ApplicationBuilder().token('6836403587:AAFaoLBovQo-Sd69RcgUk_uFTkZctRcyqZY').build()
 
