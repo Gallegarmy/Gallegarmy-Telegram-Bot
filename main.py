@@ -4,6 +4,7 @@ from newmembers import new_members
 from cerveza import cerveza
 from help import help
 from pina import pinacolada
+from fiestas import festivos
 import tracemalloc
 tracemalloc.start()
 
@@ -21,6 +22,9 @@ def main():
 
      # Add a handler for the /cañas command
     application.add_handler(CommandHandler("help", help))
+
+    # Add a handler for the /festivos command
+    application.add_handler(CommandHandler("festivos", festivos))
 
     #Add a handler for the new member entering the chat
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members))
