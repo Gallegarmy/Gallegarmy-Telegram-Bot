@@ -79,6 +79,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cursor.execute(SQLShowKarma, (usuario,))
             karma = cursor.fetchall()
             await context.bot.send_message(chat_id=update.effective_chat.id, text=f'El Karma de {usuario} es {karma[0][0]}', message_thread_id=thread_id)
+        database.commit()
         database.close()
     else:
         await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesito un usuario para mostrar o seu karma', message_thread_id=thread_id)
