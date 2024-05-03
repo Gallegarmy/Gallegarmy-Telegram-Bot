@@ -79,5 +79,27 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cursor.execute(SQLShowKarma, (usuario,))
             karma = cursor.fetchall()
             await context.bot.send_message(chat_id=update.effective_chat.id, text=f'El Karma de {usuario} es {karma[0][0]}', message_thread_id=thread_id)
+        database.close()
     else:
         await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesito un usuario para mostrar o seu karma', message_thread_id=thread_id)
+
+async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    thread_id = update.message.message_thread_id
+    list= "Usuarios con más karma:\n\n"
+    database = sqlite3.connect('sqlite.db')
+    cursor = database.cursor()
+    SQLPrimeros = ("SELECT user,karma FROM karma ORDER BY karma DESC LIMIT 3")
+    cursor.execute(SQLPrimeros)
+    users = cursor.fetchall()
+    for user in users:
+        list = list + f"{str(user[0])} - {str(user[1])}"
+        list = list + "\n"
+    list= list + "\nUsuarios con menos karma:\n\n"
+    SQLUltimos = ("SELECT user,karma FROM karma ORDER BY karma ASC LIMIT 3")
+    cursor.execute(SQLUltimos)
+    users = cursor.fetchall()
+    for user in users:
+        list = list + f"{str(user[0])} - {str(user[1])}"
+        list = list + "\n"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f'{list}', message_thread_id=thread_id)
+    database.close()

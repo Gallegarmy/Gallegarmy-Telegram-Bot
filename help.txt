@@ -1,0 +1,9 @@
+Commandos actualmente habilidatos en el bot:
+/start - Mensaje de bienvenida\n/cerveza - Informacion del proximo evento de admin cañas
+/pineapple - Un manjar tropical\n/help - Listado de comandos habilitados
+/festivos - Indica el festivo más próximo de Galicia, acepta un parametro str indicando un departamento especifico para buscar fiestas regionales
+Comandos Karma:
+/kup [usuario] - Agrega uno de karma a un usuario
+/kdown [usuario] - Quita uno de karma a un usuario
+/kshow [usuario] - Muestra el karma de un usuario
+/klist - Muestra un top de usuarios con más y menos karma
