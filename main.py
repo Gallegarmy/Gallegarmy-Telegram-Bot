@@ -5,6 +5,7 @@ from cerveza import cerveza
 from help import help
 from pina import pinacolada
 from fiestas import festivos
+from karma import kup
 import tracemalloc
 tracemalloc.start()
 
@@ -29,7 +30,8 @@ def main():
     #Add a handler for the new member entering the chat
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members))
 
-    
+    #Add a handler for adding karma to user
+    application.add_handler(CommandHandler("kup", kup))
 
     #Add a handler for the Pina command
     application.add_handler(CommandHandler("pineapple", pinacolada))
