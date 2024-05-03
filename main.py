@@ -5,7 +5,7 @@ from cerveza import cerveza
 from help import help
 from pina import pinacolada
 from fiestas import festivos
-from karma import kup
+from karma import kup, kdown, kshow
 import tracemalloc
 tracemalloc.start()
 
@@ -32,6 +32,12 @@ def main():
 
     #Add a handler for adding karma to user
     application.add_handler(CommandHandler("kup", kup))
+
+    #Add a handler for removing karma to user
+    application.add_handler(CommandHandler("kdown", kdown))
+
+    #Add a handler for showing karma of user
+    application.add_handler(CommandHandler("kshow", kshow))
 
     #Add a handler for the Pina command
     application.add_handler(CommandHandler("pineapple", pinacolada))
