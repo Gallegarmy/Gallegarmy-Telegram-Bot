@@ -1,7 +1,7 @@
 from telegram.ext import Updater, CommandHandler, ApplicationBuilder, MessageHandler, filters
 from start import start
 from newmembers import new_members
-from cerveza import cerveza
+from cerveza import cerveza, cervezahora, cervezalugar, cervezamapa, cervezaasistencia,cervezalink
 from help import help
 from pina import pinacolada
 from fiestas import festivos
@@ -20,6 +20,21 @@ def main():
 
     # Add a handler for the /cañas command
     application.add_handler(CommandHandler("cerveza", cerveza))
+
+    # Add a handler for changing the cañas time
+    application.add_handler(CommandHandler("cervezahora", cervezahora))
+
+    # Add a handler for changing the cañas place
+    application.add_handler(CommandHandler("cervezalugar", cervezalugar))
+
+    # Add a handler for changing the cañas map
+    application.add_handler(CommandHandler("cervezamapa", cervezamapa))
+
+    # Add a handler for changing the cañas assistance
+    application.add_handler(CommandHandler("cervezamapa", cervezaasistencia))
+
+    # Add a handler for changing the cañas link
+    application.add_handler(CommandHandler("cervezalink", cervezalink))
 
      # Add a handler for the /cañas command
     application.add_handler(CommandHandler("help", help))
