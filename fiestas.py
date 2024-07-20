@@ -4,7 +4,7 @@ import random, requests
 from datetime import datetime, date
 
 
-async def festivos(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def festivos(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     thread_id = update.message.message_thread_id    
     try:
         if context.args:
