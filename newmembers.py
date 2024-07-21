@@ -5,7 +5,7 @@ import threading, random
 
 welcome_messages = [
     "A wild @{username} appears!",
-    "Ok, 202 @{username}, welcome",
+    "Ok, 200 @{username}, welcome",
     "Benvido @{username}",
     "Bienvenido a la grieta del invocador, @{username}",
     "You made it, @{username}!",
