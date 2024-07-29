@@ -37,6 +37,9 @@ async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if item["id"] == int(context.args[0]):
                         itemName = item["Name"]
                         break
+                if itemName is None:
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
+                    return
                 if len(context.args) < 2:
                     if itemName in orderRound:
                         orderRound[str(itemName)] += 1
@@ -51,6 +54,10 @@ async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     else:
                         fullOrder[str(update.message.from_user.username)] = {}
                         fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
+                    print(fullOrder)
+                elif int(context.args[1]) <= 0:
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text='A cantidade non é valida', message_thread_id=thread_id)
+                    return
                 elif context.args[1] and context.args[1].isnumeric():
                     if itemName in orderRound:
                         orderRound[str(itemName)] += int(context.args[1])
@@ -65,6 +72,7 @@ async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     else:
                         fullOrder[str(update.message.from_user.username)] = {}
                         fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
+                    print(fullOrder)
                 elif context.args[1] and not context.args[1].isnumeric():
                     await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser numérica', message_thread_id=thread_id)
                     
