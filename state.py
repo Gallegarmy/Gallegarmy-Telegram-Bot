@@ -1,0 +1,3 @@
+orderRound = {}
+fullOrder = {}
+hasDinnerStarted = False

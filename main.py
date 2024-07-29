@@ -6,8 +6,10 @@ from help import help
 from pina import pinacolada
 from fiestas import festivos
 from karma import kup, kdown, kshow, klist
+from dinner import startDinner, dinnerOrder, roundOrder, changePrice, endDinner
 import tracemalloc
 tracemalloc.start()
+
 
 def main():
     
@@ -59,6 +61,21 @@ def main():
 
     #Add a handler for the Pina command
     application.add_handler(CommandHandler("pineapple", pinacolada))
+
+    #Add a handler for Starting Dinner
+    application.add_handler(CommandHandler("startdinner", startDinner))
+
+    #Add a handler for Ordering Dinner
+    application.add_handler(CommandHandler("order", dinnerOrder))
+
+    #Add a handler for Closing Order Round
+    application.add_handler(CommandHandler("roundorder", roundOrder))
+
+    #Add a handler for Changing Item Price
+    application.add_handler(CommandHandler("pricechange", changePrice))
+
+    #Add a handler for Ending Dinner
+    application.add_handler(CommandHandler("enddinner", endDinner))
 
     # Start the Bot
     application.run_polling()
