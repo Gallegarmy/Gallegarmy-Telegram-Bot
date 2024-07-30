@@ -6,7 +6,7 @@ from help import help
 from pina import pinacolada
 from fiestas import festivos
 from karma import kup, kdown, kshow, klist
-from dinner import startDinner, dinnerOrder, roundOrder, changePrice, endDinner
+from dinner import startDinner, dinnerOrder, roundOrder, changePrice, endDinner, beerTaker
 import tracemalloc
 tracemalloc.start()
 
@@ -76,6 +76,10 @@ def main():
 
     #Add a handler for Ending Dinner
     application.add_handler(CommandHandler("enddinner", endDinner))
+
+    #Add a handler for Drinking Beer
+    application.add_handler(CommandHandler("beertaker", beerTaker))
+
 
     # Start the Bot
     application.run_polling()

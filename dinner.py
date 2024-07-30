@@ -47,34 +47,65 @@ async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         orderRound[str(itemName)] = 1
                     orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
                     await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
-                    if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] += 1
-                    elif str(update.message.from_user.username) in fullOrder:
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
-                    else:
-                        fullOrder[str(update.message.from_user.username)] = {}
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
-                    print(fullOrder)
-                elif int(context.args[1]) <= 0:
+                    if update.message.from_user.username:
+                        if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] += 1
+                        elif str(update.message.from_user.username) in fullOrder:
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
+                        else:
+                            fullOrder[str(update.message.from_user.username)] = {}
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
+                    elif update.message.from_user.first_name:
+                        if str(update.message.from_user.first_name) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.first_name)]:
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] += 1
+                        elif str(update.message.from_user.first_name) in fullOrder:
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = 1
+                        else:
+                            fullOrder[str(update.message.from_user.first_name)] = {}
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = 1
+                    else: 
+                        await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
+                        return
+                elif not context.args[1].isnumeric() or not isinstance(int(context.args[1]), int):
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser un numero enteiro (@soulcodex, estou a vixiarche)', message_thread_id=thread_id)
+                    return
+                elif int(context.args[1]) <= 0 or int(context.args[1]) > 5:
                     await context.bot.send_message(chat_id=update.effective_chat.id, text='A cantidade non é valida', message_thread_id=thread_id)
                     return
-                elif context.args[1] and context.args[1].isnumeric():
-                    if itemName in orderRound:
-                        orderRound[str(itemName)] += int(context.args[1])
-                    else:
-                        orderRound[str(itemName)] = int(context.args[1])
-                    orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
-                    await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
-                    if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] += int(context.args[1])
-                    elif str(update.message.from_user.username) in fullOrder:
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
-                    else:
-                        fullOrder[str(update.message.from_user.username)] = {}
-                        fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
-                    print(fullOrder)
-                elif context.args[1] and not context.args[1].isnumeric():
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser numérica', message_thread_id=thread_id)
+                elif context.args[1] and context.args[1].isnumeric() and isinstance(context.args[1].isnumeric(), int):
+                    if update.message.from_user.username:
+                        if itemName in orderRound:
+                            orderRound[str(itemName)] += int(context.args[1])
+                        else:
+                            orderRound[str(itemName)] = int(context.args[1])
+                        orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
+                        await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
+                        if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] += int(context.args[1])
+                        elif str(update.message.from_user.username) in fullOrder:
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
+                        else:
+                            fullOrder[str(update.message.from_user.username)] = {}
+                            fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
+                    elif update.message.from_user.first_name:
+                        if itemName in orderRound:
+                            orderRound[str(itemName)] += int(context.args[1])
+                        else:
+                            orderRound[str(itemName)] = int(context.args[1])
+                        orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
+                        await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
+                        if str(update.message.from_user.first_name) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.first_name)]:
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] += int(context.args[1])
+                        elif str(update.message.from_user.first_name) in fullOrder:
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = int(context.args[1])
+                        else:
+                            fullOrder[str(update.message.from_user.first_name)] = {}
+                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = int(context.args[1])
+                    else: 
+                        await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
+                        return
+                elif context.args[1] and not context.args[1].isnumeric() and not isinstance(context.args[1].isnumeric(), int):
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser un numero enteiro (@soulcodex, estou a vixiarche)', message_thread_id=thread_id)
                     
                 elif itemName is None:
                     await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
@@ -83,90 +114,99 @@ async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text='É necesario enviar un item para ordenar', message_thread_id=thread_id)
 
+async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global orderRound, fullOrder, hasDinnerStarted
+    thread_id = update.message.message_thread_id
+    if hasDinnerStarted:
+        if update.message.from_user.username:
+            if str(update.message.from_user.username) in fullOrder:
+                fullOrder[str(update.message.from_user.username)]["1906"] = 1
+            else:
+                fullOrder[str(update.message.from_user.username)] = {}
+                fullOrder[str(update.message.from_user.username)]["1906"] = 1
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado usuario cervexeiro.', message_thread_id=thread_id)
+        elif update.message.from_user.first_name:
+            if str(update.message.from_user.first_name) in fullOrder:
+                fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
+            else:
+                fullOrder[str(update.message.from_user.first_name)] = {}
+                fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
+        else: 
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
+            return
 async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder, hasDinnerStarted, orderRound
     admins = [line.strip() for line in open('admins.txt')]
     finalBill = {}
     thread_id = update.message.message_thread_id
-    f = open('menu.json')
-    data = json.load(f)
+    with open('menu.json') as f:
+        data = json.load(f)
+
     if hasDinnerStarted:
         if str(update.message.from_user.username) in admins:
             if context.args:
-                if str(context.args[0]) == "bebidas":
-                    totalbill=0
-                    for user in fullOrder:
-                        finalBill[str(user)] = 0
-                        for id in fullOrder[user]:                            
-                            for item in data["Menu"]:
-                                if item["id"] == int(id) and int(id) >= 100 and int(id) < 200:
-                                    print(item["Price"] * int(fullOrder[user][id]))
-                                    finalBill[str(user)] += item["Price"] * int(fullOrder[user][id])
-                                elif item["id"] == int(id):
-                                    totalbill += item["Price"] * int(fullOrder[user][id])
-                    personaltotal = totalbill / len(fullOrder)
-                    print(finalBill)
-                    for user in finalBill:
-                        finalBill[user] += personaltotal
-                    billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
-                    await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
-                    orderRound = {}
-                    fullOrder = {}
-                    hasDinnerStarted = False
-                elif str(context.args[0]) == "postres":
-                    totalbill=0
-                    for user in fullOrder:
-                        finalBill[str(user)] = 0
-                        for id in fullOrder[user]:                            
-                            for item in data["Menu"]:
-                                if item["id"] == int(id) and int(id) >= 200 and int(id) < 300:
-                                    print(item["Price"] * int(fullOrder[user][id]))
-                                    finalBill[str(user)] += item["Price"] * int(fullOrder[user][id])
-                                elif item["id"] == int(id):
-                                    totalbill += item["Price"] * int(fullOrder[user][id])
-                    personaltotal = totalbill / len(fullOrder)
-                    for user in finalBill:
-                        finalBill[user] += personaltotal
-                    billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
-                    await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
-                    orderRound = {}
-                    fullOrder = {}
-                    hasDinnerStarted = False
-                elif str(context.args[0]) == "bebidasypostres":
-                    totalbill=0
-                    for user in fullOrder:
-                        finalBill[str(user)] = 0
-                        for id in fullOrder[user]:                            
-                            for item in data["Menu"]:
-                                if item["id"] == int(id) and int(id) >= 100 and int(id) < 300:
-                                    print(item["Price"] * int(fullOrder[user][id]))
-                                    finalBill[str(user)] += item["Price"] * int(fullOrder[user][id])
-                                elif item["id"] == int(id):
-                                    totalbill += item["Price"] * int(fullOrder[user][id])
-                    personaltotal = totalbill / len(fullOrder)
-                    for user in finalBill:
-                        finalBill[user] += personaltotal
-                    billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
-                    await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
-                    orderRound = {}
-                    fullOrder = {}
-                    hasDinnerStarted = False
-            else:
-                totalbill=0
+                category = str(context.args[0])
+                totalbill = 0
+                totalbeer = 0
+                beerusers = []
                 for user in fullOrder:
-                        finalBill[str(user)] = 0
-                        for id in fullOrder[user]:                            
-                            for item in data["Menu"]:
-                                if item["id"] == int(id):
-                                    totalbill += item["Price"] * int(fullOrder[user][id])
-                        personaltotal = totalbill / len(fullOrder)
+                    user_order = fullOrder.get(user, {})
+                    finalBill[str(user)] = 0
+                    for id in user_order:
+                        item_price = 0
+                        for item in data["Menu"]:
+                            if item["id"] == int(id):
+                                item_price = item["Price"]
+                                break
+                        if int(id) >= 100 and int(id) < 200 and category in ["bebidas", "bebidasypostres"]:
+                            if str(id) in ['103','104','105','106']:
+                                totalbeer += item_price * int(user_order[id])
+                            else:
+                                finalBill[str(user)] += item_price * int(user_order[id])
+                        elif int(id) >= 200 and int(id) < 300 and category in ["postres", "bebidasypostres"]:
+                            finalBill[str(user)] += item_price * int(user_order[id])
+                        elif int(id) == 1906 and category in ["bebidas", "bebidasypostres"]:
+                            beerusers.append(str(user))
+                        else:
+                            totalbill += item_price * int(user_order[id])
+
+                if category in ["bebidas", "postres", "bebidasypostres"]:
+                    personaltotal = totalbill / len(fullOrder)
+                    for user in finalBill:
+                        finalBill[user] += personaltotal
+                if category in ["bebidas","bebidasypostres"]:
+                    personalbeer = totalbeer / len(beerusers)
+                    if personalbeer > 0:
                         for user in finalBill:
-                            finalBill[user] += personaltotal
-                        billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
-                        await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
-                        orderRound = {}
-                        fullOrder = {}
-                        hasDinnerStarted = False
+                            if str(user) in beerusers:
+                                finalBill[user] += personalbeer
+                billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
+                await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
+                orderRound = {}
+                fullOrder = {}
+                hasDinnerStarted = False
+            else:
+                totalbill = 0
+                for user in fullOrder:
+                    user_order = fullOrder.get(user, {})
+                    finalBill[str(user)] = 0
+                    for id in user_order:
+                        item_price = 0
+                        for item in data["Menu"]:
+                            if item["id"] == int(id):
+                                item_price = item["Price"]
+                                break
+                        totalbill += item_price * int(user_order[id])
+                personaltotal = totalbill / len(fullOrder)
+                for user in finalBill:
+                    finalBill[user] += personaltotal
+
+                billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
+                await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
+                orderRound = {}
+                fullOrder = {}
+                hasDinnerStarted = False
+
 async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id
     global hasDinnerStarted, orderRound, fullOrder
