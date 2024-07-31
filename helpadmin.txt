@@ -11,8 +11,10 @@ Comandos Karma:
 /klist - Muestra un top de usuarios con más y menos karma
 Commandos de Menu:
 /startdinner - Inicia la cena habilitando a los usuarios a pedir
-/order [id_number] (Opcional)[Cantidad de platos]- Ordena un item del menú
+/order [id_number] (Optional)[amount]- Ordena un item del menú
 /roundorder - Cierra una ronda de pedidos y muestra los pedidos ingresados para hacer al camarero
 /pricechange [id_number] [new_price]- Cambia el precio de un item con el id pasado
-/enddinner (Opcional)[Opciones_para dividir] - Termina la cena, se puede dividir toda la cuenta entre todo, o dividir toda la cuenta salvo "bebidas", "postres" o "bebidasypostres"
+/enddinner (Optional)[Opciones_para dividir] - Termina la cena, se puede dividir toda la cuenta entre todo, o dividir toda la cuenta salvo "bebidas", "postres" o "bebidasypostres"
 /beer - Agrega un vaso de cerveza a nombre de quien envió el comando (Se usa para dividir la cuenta, cortesía de @jjqrs)
+/menuchange [id_number] [new_name] [new_price] - Si el item existe en el menú, modifica su nombre y su precio, si no existe lo agrega
+/orderchange [id_number] (Optional)[amount] - Elimina el id enviado una x cantidad de veces de la ronda, si no se pasa cantidad lo elimina solo una vez
