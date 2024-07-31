@@ -78,7 +78,7 @@ def main():
     application.add_handler(CommandHandler("enddinner", endDinner))
 
     #Add a handler for Drinking Beer
-    application.add_handler(CommandHandler("beertaker", beerTaker))
+    application.add_handler(CommandHandler("beer", beerTaker))
 
 
     # Start the Bot

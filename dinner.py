@@ -9,12 +9,12 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id
 
     if str(update.message.from_user.username) in admins:
-        with open("menu.json", 'r') as archive:
+        with open("menu.json", 'r', encoding='utf-8') as archive:
             menu = json.load(archive)
         
         orderMessages = []
         for item in menu["Menu"]:
-            orderMessages.append(f"{item['id']} - {item['Name']} \n Precio: {item['Price']} €")        
+            orderMessages.append(f"{item['id']} - {item['Name'].capitalize()} ({item['Price']} €)")        
         orderMessage = "\n".join(orderMessages)
         
         MAX_MESSAGE_LENGTH = 4096
@@ -119,18 +119,25 @@ async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id
     if hasDinnerStarted:
         if update.message.from_user.username:
-            if str(update.message.from_user.username) in fullOrder:
+            if str(update.message.from_user.username) in fullOrder and "1906" in fullOrder[str(update.message.from_user.username)]:
+                fullOrder[str(update.message.from_user.username)]["1906"] += 1
+            elif str(update.message.from_user.username) in fullOrder:
                 fullOrder[str(update.message.from_user.username)]["1906"] = 1
             else:
                 fullOrder[str(update.message.from_user.username)] = {}
                 fullOrder[str(update.message.from_user.username)]["1906"] = 1
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado usuario cervexeiro.', message_thread_id=thread_id)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado un vaso de cervexa para o usuario.', message_thread_id=thread_id)
+            return
         elif update.message.from_user.first_name:
-            if str(update.message.from_user.first_name) in fullOrder:
+            if str(update.message.from_user.first_name) in fullOrder and "1906" in fullOrder[str(update.message.from_user.first_name)]:
+                fullOrder[str(update.message.from_user.first_name)]["1906"] += 1
+            elif str(update.message.from_user.first_name) in fullOrder:
                 fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
             else:
                 fullOrder[str(update.message.from_user.first_name)] = {}
                 fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado un vaso de cervexa para o usuario.', message_thread_id=thread_id)
+            return
         else: 
             await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
             return
@@ -148,6 +155,7 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 category = str(context.args[0])
                 totalbill = 0
                 totalbeer = 0
+                beeramount = 0
                 beerusers = []
                 for user in fullOrder:
                     user_order = fullOrder.get(user, {})
@@ -167,6 +175,7 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             finalBill[str(user)] += item_price * int(user_order[id])
                         elif int(id) == 1906 and category in ["bebidas", "bebidasypostres"]:
                             beerusers.append(str(user))
+                            beeramount += fullOrder[str(user)]["1906"]
                         else:
                             totalbill += item_price * int(user_order[id])
 
@@ -175,12 +184,12 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     for user in finalBill:
                         finalBill[user] += personaltotal
                 if category in ["bebidas","bebidasypostres"]:
-                    personalbeer = totalbeer / len(beerusers)
+                    personalbeer = totalbeer / beeramount
                     if personalbeer > 0:
                         for user in finalBill:
                             if str(user) in beerusers:
-                                finalBill[user] += personalbeer
-                billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
+                                finalBill[user] += personalbeer * fullOrder[str(user)]["1906"]
+                billMessage = "\n".join([f"{key} - {round(float(value),2)}€" for key, value in finalBill.items()])
                 await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
                 orderRound = {}
                 fullOrder = {}

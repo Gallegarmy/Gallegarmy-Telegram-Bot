@@ -15,3 +15,4 @@ Commandos de Menu:
 /roundorder - Cierra una ronda de pedidos y muestra los pedidos ingresados para hacer al camarero
 /pricechange [id_number] [new_price]- Cambia el precio de un item con el id pasado
 /enddinner (Opcional)[Opciones_para dividir] - Termina la cena, se puede dividir toda la cuenta entre todo, o dividir toda la cuenta salvo "bebidas", "postres" o "bebidasypostres"
+/beer - Agrega un vaso de cerveza a nombre de quien envió el comando (Se usa para dividir la cuenta, cortesía de @jjqrs)
