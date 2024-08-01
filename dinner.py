@@ -377,6 +377,6 @@ async def get_user(update, context):
                                        message_thread_id=get_thread_id(update))
         return
 
+
     return request_user
-
-
+  
