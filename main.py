@@ -1,4 +1,4 @@
-from telegram.ext import CommandHandler, ApplicationBuilder, MessageHandler, filters
+from telegram.ext import CommandHandler, ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler
 
 from start import start
 from newmembers import new_members
@@ -7,7 +7,8 @@ from help import help
 from pina import pinacolada
 from fiestas import festivos
 from karma import kup, kdown, kshow, klist
-from dinner import startDinner, dinnerOrder, roundOrder, changePrice, endDinner, beerTaker, changeMenu, removeItemOrder
+from dinner import startDinner, roundOrder, changePrice, endDinner, beerTaker, changeMenu, dinnerOrder, removeItemOrder, \
+    show_dinner_keyboard, dinnerkeyb_handler
 import tracemalloc
 import os
 tracemalloc.start()
@@ -15,15 +16,11 @@ tracemalloc.start()
 
 def get_bot_token():
     return os.environ['BOT_TOKEN']
-    # return '6836403587:AAFaoLBovQo-Sd69RcgUk_uFTkZctRcyqZY'
 
 
 def main():
     # Create an updater object with your bot's token
     application = ApplicationBuilder().token(get_bot_token()).build()
-
-    # Add a handler for the new member entering the chat
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members))
 
     commands = {
         'beer': beerTaker,
@@ -52,6 +49,15 @@ def main():
 
     for comm_string, funct in commands.items():
         application.add_handler(CommandHandler(comm_string, funct))
+
+    # Exemplo minimo de teclado
+    # TODO Mover ao dict de arriba
+    application.add_handler(CommandHandler('teclado', show_dinner_keyboard))
+
+    application.add_handler(CallbackQueryHandler(dinnerkeyb_handler, ))
+
+    # Add a handler for the new member entering the chat
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members))
 
     # Start the Bot
     application.run_polling()

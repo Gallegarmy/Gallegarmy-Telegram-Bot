@@ -1,3 +1,0 @@
-orderRound = {}
-fullOrder = {}
-hasDinnerStarted = False

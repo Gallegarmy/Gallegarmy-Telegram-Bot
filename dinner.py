@@ -1,14 +1,50 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
-from state import orderRound, fullOrder, hasDinnerStarted
+from contextlib import suppress
+
+import telegram
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import ContextTypes
 import json
+from collections import defaultdict
+
+
+def default_factory():
+    return defaultdict(int)
+
+
+"""
+    En este diccionario no hay que crear cada subdiccionario 
+    ni comprobar que existan las claves.
+
+    De este modo al hacer:
+        fullOrder['user']['1906']
+        fullOrder['user']['patatas']
+
+    las entradas se crean si no existen con valor a cero por defecto.
+
+    Si en lugar de lo anterior escribiesemos, por ej:
+        fullOrder['user']['1906'] += valor
+        fullOrder['user']['patatas'] += valor
+
+    además de lo anterior, crear las entradas a cero si no existen, 
+    y siempre sumaría valor al valor ya contenido en la entrada.
+"""
+fullOrder = defaultdict(default_factory)
+
+with open("menu.json", 'r', encoding='utf-8') as archive:
+    menu = json.load(archive)
+    names = {int(obj['id']): obj['Name'] for obj in menu['Menu']}
+
+orderRound = defaultdict(int)
+hasDinnerStarted = False
+
+ADMINS = [line.strip() for line in open('admins.txt')]
+
 
 async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE): 
     global hasDinnerStarted
-    admins = [line.strip() for line in open('admins.txt')]
     thread_id = update.message.message_thread_id
 
-    if str(update.message.from_user.username) in admins:
+    if str(update.message.from_user.username) in ADMINS:
         with open("menu.json", 'r', encoding='utf-8') as archive:
             menu = json.load(archive)
         
@@ -24,133 +60,149 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         hasDinnerStarted = True
 
-async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global orderRound, fullOrder, hasDinnerStarted
-    f = open('menu.json')
-    data = json.load(f)
-    thread_id = update.message.message_thread_id
-    if hasDinnerStarted:
-        if context.args:
-            if context.args[0].isnumeric():
-                itemName = None
-                for item in data["Menu"]:
-                    if item["id"] == int(context.args[0]):
-                        itemName = item["Name"]
-                        break
-                if itemName is None:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-                    return
-                if len(context.args) < 2:
-                    if itemName in orderRound:
-                        orderRound[str(itemName)] += 1
-                    else:
-                        orderRound[str(itemName)] = 1
-                    orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
-                    await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
-                    if update.message.from_user.username:
-                        if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] += 1
-                        elif str(update.message.from_user.username) in fullOrder:
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
-                        else:
-                            fullOrder[str(update.message.from_user.username)] = {}
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] = 1
-                    elif update.message.from_user.first_name:
-                        if str(update.message.from_user.first_name) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.first_name)]:
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] += 1
-                        elif str(update.message.from_user.first_name) in fullOrder:
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = 1
-                        else:
-                            fullOrder[str(update.message.from_user.first_name)] = {}
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = 1
-                    else: 
-                        await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
-                        return
-                elif not context.args[1].isnumeric() or not isinstance(int(context.args[1]), int):
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser un numero enteiro (@soulcodex, estou a vixiarche)', message_thread_id=thread_id)
-                    return
-                elif int(context.args[1]) <= 0 or int(context.args[1]) > 5:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='A cantidade non é valida', message_thread_id=thread_id)
-                    return
-                elif context.args[1] and context.args[1].isnumeric() and isinstance(context.args[1].isnumeric(), int):
-                    if update.message.from_user.username:
-                        if itemName in orderRound:
-                            orderRound[str(itemName)] += int(context.args[1])
-                        else:
-                            orderRound[str(itemName)] = int(context.args[1])
-                        orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
-                        await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
-                        if str(update.message.from_user.username) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.username)]:
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] += int(context.args[1])
-                        elif str(update.message.from_user.username) in fullOrder:
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
-                        else:
-                            fullOrder[str(update.message.from_user.username)] = {}
-                            fullOrder[str(update.message.from_user.username)][context.args[0]] = int(context.args[1])
-                    elif update.message.from_user.first_name:
-                        if itemName in orderRound:
-                            orderRound[str(itemName)] += int(context.args[1])
-                        else:
-                            orderRound[str(itemName)] = int(context.args[1])
-                        orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
-                        await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
-                        if str(update.message.from_user.first_name) in fullOrder and context.args[0] in fullOrder[str(update.message.from_user.first_name)]:
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] += int(context.args[1])
-                        elif str(update.message.from_user.first_name) in fullOrder:
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = int(context.args[1])
-                        else:
-                            fullOrder[str(update.message.from_user.first_name)] = {}
-                            fullOrder[str(update.message.from_user.first_name)][context.args[0]] = int(context.args[1])
-                    else: 
-                        await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
-                        return
-                elif context.args[1] and not context.args[1].isnumeric() and not isinstance(context.args[1].isnumeric(), int):
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='Se vas enviar unha cantidade de pratos, a mesma debe ser un numero enteiro (@soulcodex, estou a vixiarche)', message_thread_id=thread_id)
-                    
-                elif itemName is None:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-            else:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
+
+def find_menuitem(data, menu_item_id):
+    itemName = None
+    for item in data["Menu"]:
+        if item["id"] == int(menu_item_id):
+            itemName = item["Name"]
+            break
+    return itemName
+
+
+def is_quantity_in_range(quantity):
+    return 0 < quantity <= 5
+
+
+async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyb = InlineKeyboardMarkup([
+        [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
+        [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
+    ])
+    await update.effective_chat.send_message('A puta mensaxede texto que me obriga a meter', reply_markup=keyb)
+
+
+async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update and update.callback_query:
+
+        example_msg = f'Recibido datos de boton: {update.callback_query.data}'
+        if update.callback_query.data == 'beer':
+            # Hai que escribir text= porque se non se pensa que o argumento é un chat_id
+            await context.bot.send_message(text='Cervexa! ' + example_msg, chat_id=update.effective_chat.id)
+
+            # Suprimimos o erro en caso de timeout
+            # (prefiro isto a un try/except que non fai nada coa excepcion)
+            with suppress(telegram.error.BadRequest):
+                await update.callback_query.answer('Popup molon de birra')
         else:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='É necesario enviar un item para ordenar', message_thread_id=thread_id)
+            # Hai que escribir text= porque se non se pensa que o argumento é un chat_id
+            await context.bot.send_message(text='Toca pagar! ' + example_msg, chat_id=update.effective_chat.id)
+            with suppress(telegram.error.BadRequest):
+                await update.callback_query.answer('Popup molon de dinero')
+
+
 
 async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global orderRound, fullOrder, hasDinnerStarted
     thread_id = update.message.message_thread_id
     if hasDinnerStarted:
-        if update.message.from_user.username:
-            if str(update.message.from_user.username) in fullOrder and "1906" in fullOrder[str(update.message.from_user.username)]:
-                fullOrder[str(update.message.from_user.username)]["1906"] += 1
-            elif str(update.message.from_user.username) in fullOrder:
-                fullOrder[str(update.message.from_user.username)]["1906"] = 1
+        request_user = await get_user(update, context)
+
+        fullOrder[request_user]["1906"] += 1
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text='Agregado un vaso de cervexa para o usuario.', message_thread_id=thread_id)
+
+
+async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return await addOrRemove(update, context, True)
+
+
+async def removeItemOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return await addOrRemove(update, context, False)
+
+
+async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
+    global fullOrder, hasDinnerStarted, orderRound
+
+    if not add and str(update.message.from_user.username) not in ADMINS:
+        return
+    thread_id = update.message.message_thread_id
+    if hasDinnerStarted:
+        if not context.args:
+            await context.bot.send_message(chat_id=update.effective_chat.id,
+                                           text='É necesario enviar un item para modificar o pedido', message_thread_id=thread_id)
+            return
+
+        if len(context.args) < 3:
+            quantity = 1
+            if len(context.args) > 1:
+                try:
+                    quantity = int(context.args[1])
+                except ValueError as e:
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text='A cantidade non é válida',
+                                                   message_thread_id=thread_id)
+                    return
+
+            if add:
+                if not is_quantity_in_range(quantity):
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text='A cantidade non é valida', message_thread_id=thread_id)
+                    return
+
+            request_user = await get_user(update, context)
+
+
+            # Recuperamos o item (prato, bebida, postre) do menu
+            menu_item_id = context.args[0]
+            if not menu_item_id.isnumeric():
+                await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido',
+                                               message_thread_id=thread_id)
+                return
+
+            menu_item_id = int(menu_item_id)
+            if not menu_item_id in names:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido',
+                                               message_thread_id=thread_id)
+                return
+
+            if add:
+                orderRound[menu_item_id] += quantity
+                fullOrder[request_user][menu_item_id] += quantity
             else:
-                fullOrder[str(update.message.from_user.username)] = {}
-                fullOrder[str(update.message.from_user.username)]["1906"] = 1
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado un vaso de cervexa para o usuario.', message_thread_id=thread_id)
+                if menu_item_id in orderRound:
+                    orderRound[menu_item_id] -= quantity
+
+                    if orderRound[menu_item_id] <= 0:
+                        del orderRound[menu_item_id]
+
+                if menu_item_id in fullOrder:
+                    fullOrder[request_user][menu_item_id] -= quantity
+
+                    if fullOrder[request_user][menu_item_id] <= 0:
+                        del fullOrder[request_user][menu_item_id]
+
+            orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
+            await context.bot.send_message(chat_id=update.message.chat_id,
+                                           text=f"{orderMessage}",
+                                           message_thread_id=thread_id)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Orde modificada',
+                                           message_thread_id=thread_id)
             return
-        elif update.message.from_user.first_name:
-            if str(update.message.from_user.first_name) in fullOrder and "1906" in fullOrder[str(update.message.from_user.first_name)]:
-                fullOrder[str(update.message.from_user.first_name)]["1906"] += 1
-            elif str(update.message.from_user.first_name) in fullOrder:
-                fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
-            else:
-                fullOrder[str(update.message.from_user.first_name)] = {}
-                fullOrder[str(update.message.from_user.first_name)]["1906"] = 1
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='Agregado un vaso de cervexa para o usuario.', message_thread_id=thread_id)
+        else:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text='Non se admiten máis de dous argumentos para esta funcion', message_thread_id=thread_id)
             return
-        else: 
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='Necesítase un username ou nome en Telegram para ordenar.', message_thread_id=thread_id)
-            return
+
+
 async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder, hasDinnerStarted, orderRound
-    admins = [line.strip() for line in open('admins.txt')]
     finalBill = {}
     thread_id = update.message.message_thread_id
     with open('menu.json') as f:
         data = json.load(f)
 
     if hasDinnerStarted:
-        if str(update.message.from_user.username) in admins:
+        if await get_user(update, context) in ADMINS:
             if context.args:
                 category = str(context.args[0])
                 totalbill = 0
@@ -159,36 +211,32 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 beerusers = []
                 for user in fullOrder:
                     user_order = fullOrder.get(user, {})
-                    finalBill[str(user)] = 0
-                    for id in user_order:
+                    finalBill[user] = 0
+                    for item_id in user_order:
                         item_price = 0
-                        for item in data["Menu"]:
-                            if item["id"] == int(id):
-                                item_price = item["Price"]
-                                break
-                        if int(id) >= 100 and int(id) < 200 and category in ["bebidas", "bebidasypostres"]:
-                            if str(id) in ['103','104','105','106']:
-                                totalbeer += item_price * int(user_order[id])
+                        if item_id >= 100 and item_id < 200 and category in ["bebidas", "bebidasypostres"]:
+                            if str(item_id) in ('103', '104', '105', '106'):
+                                totalbeer += item_price * user_order[item_id]
                             else:
-                                finalBill[str(user)] += item_price * int(user_order[id])
-                        elif int(id) >= 200 and int(id) < 300 and category in ["postres", "bebidasypostres"]:
-                            finalBill[str(user)] += item_price * int(user_order[id])
-                        elif int(id) == 1906 and category in ["bebidas", "bebidasypostres"]:
-                            beerusers.append(str(user))
-                            beeramount += fullOrder[str(user)]["1906"]
+                                finalBill[user] += item_price * user_order[item_id]
+                        elif item_id >= 200 and item_id < 300 and category in ["postres", "bebidasypostres"]:
+                            finalBill[user] += item_price * user_order[item_id]
+                        elif item_id == 1906 and category in ["bebidas", "bebidasypostres"]:
+                            beerusers.append(user)
+                            beeramount += fullOrder[user]["1906"]
                         else:
-                            totalbill += item_price * int(user_order[id])
+                            totalbill += item_price * user_order[item_id]
 
                 if category in ["bebidas", "postres", "bebidasypostres"]:
                     personaltotal = totalbill / len(fullOrder)
                     for user in finalBill:
                         finalBill[user] += personaltotal
-                if category in ["bebidas","bebidasypostres"]:
+                if category in ["bebidas", "bebidasypostres"]:
                     personalbeer = totalbeer / beeramount
                     if personalbeer > 0:
                         for user in finalBill:
-                            if str(user) in beerusers:
-                                finalBill[user] += personalbeer * fullOrder[str(user)]["1906"]
+                            if user in beerusers:
+                                finalBill[user] += personalbeer * fullOrder[user]["1906"]
                 billMessage = "\n".join([f"{key} - {round(float(value),2)}€" for key, value in finalBill.items()])
                 await context.bot.send_message(chat_id=update.message.chat_id, text=f"{billMessage}", message_thread_id=thread_id)
                 orderRound = {}
@@ -198,14 +246,14 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 totalbill = 0
                 for user in fullOrder:
                     user_order = fullOrder.get(user, {})
-                    finalBill[str(user)] = 0
-                    for id in user_order:
+                    finalBill[user] = 0
+                    for item_id in user_order:
                         item_price = 0
                         for item in data["Menu"]:
-                            if item["id"] == int(id):
+                            if item["id"] == item_id:
                                 item_price = item["Price"]
                                 break
-                        totalbill += item_price * int(user_order[id])
+                        totalbill += item_price * user_order[item_id]
                 personaltotal = totalbill / len(fullOrder)
                 for user in finalBill:
                     finalBill[user] += personaltotal
@@ -216,20 +264,21 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 fullOrder = {}
                 hasDinnerStarted = False
 
+
 async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id
     global hasDinnerStarted, orderRound, fullOrder
     if hasDinnerStarted:
-        orderMessage = "\n".join([f"{value} - {key}" for key, value in orderRound.items()])
+        orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
         await context.bot.send_message(chat_id=update.message.chat_id, text=f"{orderMessage}", message_thread_id=thread_id)
         orderRound = {}
 
+
 async def changePrice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    admins = [line.strip() for line in open('admins.txt')]
     thread_id = update.message.message_thread_id
     f = open('menu.json')
     data = json.load(f)
-    if str(update.message.from_user.username) in admins:
+    if str(update.message.from_user.username) in ADMINS:
         if context.args:
                 if context.args[0].isnumeric():
                     if len(context.args) == 2:
@@ -245,20 +294,16 @@ async def changePrice(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
 
+
 async def changeMenu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    admins = [line.strip() for line in open('admins.txt')]
-    thread_id = update.message.message_thread_id
+    thread_id = await get_thread_id(update)
 
     try:
-        with open('menu.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        data = [] 
+        data = await open_menu_file(update, context)
     except json.JSONDecodeError:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text='Error al leer el archivo de menú.', message_thread_id=thread_id)
         return
 
-    if str(update.message.from_user.username) in admins:
+    if get_user(update, context) in ADMINS:
         if context.args and len(context.args) == 3:
             if context.args[0].isnumeric():
                 item_id = int(context.args[0])
@@ -295,83 +340,43 @@ async def changeMenu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text='Faltan argumentos para executar a función.', message_thread_id=thread_id)
 
-async def removeItemOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global fullOrder, hasDinnerStarted, orderRound
-    admins = [line.strip() for line in open('admins.txt')]
-    thread_id = update.message.message_thread_id   
+
+def get_thread_id(update):
+    thread_id = update.message.message_thread_id
+    return thread_id
+
+
+async def open_menu_file(update, context):
+    """
+    Abre el menu.json con el menu de Fire Capitano
+    :param update:
+    :param context:
+    :param thread_id: el thread_id
+    :return: el diccionario con el contenido del menu de Fire Capitano
+    """
     try:
         with open('menu.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
+    except json.JSONDecodeError as e:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text='Error al leer el archivo de menú.',
+                                       message_thread_id=get_thread_id(update))
+        raise e
     except FileNotFoundError:
-        data = [] 
-    except json.JSONDecodeError:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text='Error al leer el archivo de menú.', message_thread_id=thread_id)
+        data = []
+    return data
+
+
+async def get_user(update, context):
+    if update.message.from_user.username:
+        request_user = str(update.message.from_user.username)
+    elif update.message.from_user.first_name:
+        request_user = str(update.message.from_user.first_name)
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text='Necesítase un username ou nome en Telegram para interactuar co bot.',
+                                       message_thread_id=get_thread_id(update))
         return
-    if hasDinnerStarted and str(update.message.from_user.username) in admins:
-        if context.args:
-            if len(context.args) == 1:
-                if context.args[0].isnumeric() and isinstance(context.args[0], int):
-                    for item in data["Menu"]:
-                        if item["id"] == int(context.args[0]):
-                            itemName = item["Name"]
-                            break
-                        if itemName is None:
-                            await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-                            return
-                        for item in orderRound:
-                            if str(item) == str(itemName):
-                                if 1 >= int(orderRound[str(item)]):
-                                    del orderRound[str(item)]
-                                else:
-                                    orderRound[str(item)] -= 1
-                                    break
-                        for user in fullOrder:
-                            for id in user:
-                                if str(id) == str(context.args[0]):
-                                    if 1 >= int(fullOrder[user][id]):
-                                        del fullOrder[user][id]
-                                    else:
-                                        fullOrder[user][id] -= 1
-                                        break
-                        await context.bot.send_message(chat_id=update.effective_chat.id, text='Orde modificada', message_thread_id=thread_id)
-                        return
-                else:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-                    return
-            elif len(context.args) == 2:
-                if context.args[0].isnumeric() and isinstance(context.args[0], int):
-                    if context.args[1].isnumeric() and isinstance(context.args[1], int):
-                        for item in data["Menu"]:
-                            if int(item["id"]) == int(context.args[0]):
-                                itemName = item["Name"]
-                                break
-                            if itemName is None:
-                                await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-                                return
-                            for item in orderRound:
-                                if str(item) == str(itemName):
-                                    if int(context.args[1]) >= int(orderRound[str(item)]):
-                                        del orderRound[str(item)]
-                                    else:
-                                        orderRound[str(item)] -= int(context.args[1])
-                                    break
-                            for user in fullOrder:
-                                for id in user:
-                                    if str(id) == str(context.args[0]):
-                                        if int(context.args[1]) >= int(fullOrder[user][id]):
-                                            del fullOrder[user][id]
-                                        else:
-                                            fullOrder[user][id] -= int(context.args[1])
-                                        break
-                            await context.bot.send_message(chat_id=update.effective_chat.id, text='Orde modificada', message_thread_id=thread_id)
-                            return
-                    else:
-                        await context.bot.send_message(chat_id=update.effective_chat.id, text='A cantidade non é válida', message_thread_id=thread_id)
-                        return
-                else:
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
-                    return
-            else:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text='Non se admiten máis de dous arguementos para esta funcion', message_thread_id=thread_id)
-                return
-        
+
+    return request_user
+
+
