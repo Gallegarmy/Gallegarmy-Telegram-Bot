@@ -74,7 +74,7 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             part = orderMessage[i:i + MAX_MESSAGE_LENGTH]
 
         keyb = InlineKeyboardMarkup([
-            [InlineKeyboardButton('\U0001F37A', callback_data=f'beer,{thread_id}'), InlineKeyboardButton('\U0000261D', callback_data=f'order,{thread_id}')],
+            [InlineKeyboardButton('\U0001F37A', callback_data=f'beer'), InlineKeyboardButton('\U0000261D', callback_data=f'order')],
             
         ])
         await update.effective_chat.send_message(part, reply_markup=keyb, message_thread_id=thread_id)
@@ -106,8 +106,7 @@ async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYP
 async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update and update.callback_query:
 
-        parts = update.callback_query.data.split(',')
-        command = parts[0]
+        command = update.callback_query.data
 
         example_msg = f'Recibido datos de boton: {update.callback_query.data}'
         if command == 'beer':
@@ -117,7 +116,6 @@ async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
             with suppress(telegram.error.BadRequest):
                 await update.callback_query.answer('Popup molon de birra')
         elif command == 'bill':
-            # Hai que escribir text= porque se non se pensa que o argumento é un chat_id
             await endDinner(update,context)
             with suppress(telegram.error.BadRequest):
                 await update.callback_query.answer('Popup molon de dinero')
@@ -268,7 +266,8 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 billMessage = "\n".join([f"{key} - {round(float(value), 2)}€" for key, value in finalBill.items()])
                 await context.bot.send_message(chat_id=update.effective_message.chat_id, text=billMessage, message_thread_id=await get_thread_id(update))
                 orderRound = defaultdict(int)
-                fullOrder = {}
+                fullOrder = defaultdict(default_factory)
+                del context.chat_data['order_msg']
                 hasDinnerStarted = False
             else:
                 totalbill = 0
@@ -286,7 +285,8 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 billMessage = "\n".join([f"{key} - {value}€" for key, value in finalBill.items()])
                 await context.bot.send_message(chat_id=update.effective_message.chat_id, text=billMessage, message_thread_id=await get_thread_id(update))
                 orderRound = defaultdict(int)
-                fullOrder = {}
+                fullOrder = defaultdict(default_factory)
+                del context.chat_data['order_msg']
                 hasDinnerStarted = False
 
 
@@ -294,7 +294,7 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global hasDinnerStarted, orderRound, fullOrder
     if hasDinnerStarted:
-        await show_order(update, context)
+        del context.chat_data['order_msg']
         orderRound = defaultdict(int)
 
 
@@ -302,12 +302,16 @@ async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global orderRound
     orderMessage = 'PEDIDO:\n\n'
     orderMessage += "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
+    new_order = f"{orderMessage}"
     if 'order_msg' not in context.chat_data:
-        order_msg = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=f"{orderMessage}",
+        order_msg = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=new_order,
                                                    message_thread_id=await get_thread_id(update))
         context.chat_data['order_msg'] = order_msg
     else:
-        await context.chat_data['order_msg'].edit_text(text=f"{orderMessage}")
+        msg : Message = context.chat_data['order_msg']
+        if msg.text.strip() != new_order.strip():
+            order_msg = await context.chat_data['order_msg'].edit_text(text=new_order)
+            context.chat_data['order_msg'] = order_msg
 
 
 @async_only_dinner_chat
