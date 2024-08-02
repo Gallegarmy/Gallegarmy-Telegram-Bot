@@ -1,3 +1,4 @@
+import functools
 from contextlib import suppress
 
 import telegram
@@ -6,10 +7,24 @@ from telegram.ext import ContextTypes
 import json
 from collections import defaultdict
 
+FOOD_THREAD_ID = 4226
+
 
 def default_factory():
     return defaultdict(int)
 
+
+def async_only_dinner_chat(func):
+    """
+    Decorador pra que non se atendan solicitudes de fora do Topic de comida
+    :param func: a funcion a decorar
+    :return: a funcion habilitada pra responder soamente no Topic de comida
+    """
+    @functools.wraps(func)
+    async def wrapper(update: Update, context: ContextTypes):
+        if update.effective_message.message_thread_id == FOOD_THREAD_ID:
+            return await func(update, context)
+    return wrapper
 
 """
     En este diccionario no hay que crear cada subdiccionario 
@@ -40,6 +55,7 @@ hasDinnerStarted = False
 ADMINS = [line.strip() for line in open('admins.txt')]
 
 
+@async_only_dinner_chat
 async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE): 
     global hasDinnerStarted
     thread_id = await get_thread_id(update)
@@ -125,11 +141,11 @@ async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(chat_id=update.effective_chat.id,
                                            text=f'Agregado un vaso de cervexa para {request_user}', message_thread_id=await get_thread_id(update))
 
-
+@async_only_dinner_chat
 async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await addOrRemove(update, context, True)
 
-
+@async_only_dinner_chat
 async def removeItemOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await addOrRemove(update, context, False)
 
@@ -206,7 +222,7 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
             await context.bot.send_message(chat_id=update.effective_chat.id, text='Non se admiten máis de dous argumentos para esta funcion', message_thread_id=thread_id)
             return
 
-
+@async_only_dinner_chat
 async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder, hasDinnerStarted, orderRound
     finalBill = {}
@@ -285,6 +301,7 @@ async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         orderRound = defaultdict(int)
 
 
+@async_only_dinner_chat
 async def changePrice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id
     f = open('menu.json')
@@ -306,6 +323,7 @@ async def changePrice(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await context.bot.send_message(chat_id=update.effective_chat.id, text='O ide non é válido', message_thread_id=thread_id)
 
 
+@async_only_dinner_chat
 async def changeMenu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = await get_thread_id(update)
 
