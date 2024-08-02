@@ -66,7 +66,7 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         orderMessages = []
         for item in menu["Menu"]:
-            orderMessages.append(f"{item['id']} - {item['Name'].capitalize()} ({item['Price']} €)")        
+            orderMessages.append(f"{item['id']} - ({item['Price']} €) {item['Name'].capitalize()} ")
         orderMessage = "\n".join(orderMessages)
         
         MAX_MESSAGE_LENGTH = 4096
@@ -211,10 +211,7 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
                     if fullOrder[request_user][menu_item_id] <= 0:
                         del fullOrder[request_user][menu_item_id]
 
-            orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
-            await context.bot.send_message(chat_id=update.message.chat_id,
-                                           text=f"{orderMessage}",
-                                           message_thread_id=thread_id)
+            await show_order(update, context)
             await context.bot.send_message(chat_id=update.effective_chat.id, text='Orde modificada',
                                            message_thread_id=thread_id)
             return
@@ -296,9 +293,19 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global hasDinnerStarted, orderRound, fullOrder
     if hasDinnerStarted:
-        orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
-        await context.bot.send_message(chat_id=update.effective_message.chat_id, text=f"{orderMessage}", message_thread_id=await get_thread_id(update))
+        await show_order(update, context)
         orderRound = defaultdict(int)
+
+
+async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global orderRound
+    orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
+    if 'order_msg' not in context.chat_data:
+        order_msg = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=f"{orderMessage}",
+                                                   message_thread_id=await get_thread_id(update))
+        context.chat_data['order_msg'] = order_msg
+    else:
+        context.chat_data['order_msg'].edit_text(text=f"{orderMessage}")
 
 
 @async_only_dinner_chat
