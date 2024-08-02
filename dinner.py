@@ -108,7 +108,6 @@ async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         parts = update.callback_query.data.split(',')
         command = parts[0]
-        thread_id = parts[1]
 
         example_msg = f'Recibido datos de boton: {update.callback_query.data}'
         if command == 'beer':
@@ -153,7 +152,7 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
 
     if not add and str(update.message.from_user.username) not in ADMINS:
         return
-    thread_id = update.message.message_thread_id
+    thread_id = await get_thread_id(update)
     if hasDinnerStarted:
         if not context.args:
             await context.bot.send_message(chat_id=update.effective_chat.id,
@@ -210,8 +209,6 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
                         del fullOrder[request_user][menu_item_id]
 
             await show_order(update, context)
-            await context.bot.send_message(chat_id=update.effective_chat.id, text='Orde modificada',
-                                           message_thread_id=thread_id)
             return
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text='Non se admiten máis de dous argumentos para esta funcion', message_thread_id=thread_id)
@@ -303,13 +300,14 @@ async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global orderRound
-    orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
+    orderMessage = 'PEDIDO:\n\n'
+    orderMessage += "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
     if 'order_msg' not in context.chat_data:
         order_msg = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=f"{orderMessage}",
                                                    message_thread_id=await get_thread_id(update))
         context.chat_data['order_msg'] = order_msg
     else:
-        context.chat_data['order_msg'].edit_text(text=f"{orderMessage}")
+        await context.chat_data['order_msg'].edit_text(text=f"{orderMessage}")
 
 
 @async_only_dinner_chat
@@ -408,16 +406,21 @@ async def get_user(update, context):
     elif update.callback_query and update.callback_query.from_user:
         user = update.callback_query.from_user
 
-    if user is not None:
-        if user.username:
-            request_user = user.username
-        elif user.from_user.first_name:
-            request_user = user.first_name
-        else:
-            await context.bot.send_message(chat_id=update.effective_chat.id,
-                                           text='Necesítase un username ou nome en Telegram para interactuar co bot.',
-                                           message_thread_id=await get_thread_id(update))
-            return
+    if user is None:
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text='Necesítase un username ou nome en Telegram para interactuar co bot.',
+                                       message_thread_id=await get_thread_id(update))
+        return
+
+    if user.username:
+        request_user = user.username
+    elif user.from_user.first_name:
+        request_user = user.first_name
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text='Necesítase un username ou nome en Telegram para interactuar co bot.',
+                                       message_thread_id=await get_thread_id(update))
+        return
     return request_user
 
 
