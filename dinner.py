@@ -58,6 +58,12 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             part = orderMessage[i:i + MAX_MESSAGE_LENGTH]
             await context.bot.send_message(chat_id=update.message.chat_id, text=part, message_thread_id=thread_id)
 
+        keyb = InlineKeyboardMarkup([
+            [InlineKeyboardButton('\U0001F37A', callback_data=f'beer,{thread_id}'), InlineKeyboardButton('\U0001F4B6', callback_data=f'bill,{thread_id}')],
+            [InlineKeyboardButton('\U0000261D', callback_data=f'order,{thread_id}')],
+        ])
+        await update.effective_chat.send_message('A puta mensaxede texto que me obriga a meter', reply_markup=keyb, message_thread_id=thread_id)
+
         hasDinnerStarted = True
 
 
@@ -75,36 +81,42 @@ def is_quantity_in_range(quantity):
 
 
 async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    thread_id = update.message.message_thread_id
     keyb = InlineKeyboardMarkup([
         [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
-        [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
+        [InlineKeyboardButton('\U0000261D', callback_data='order')],
     ])
-    await update.effective_chat.send_message('A puta mensaxede texto que me obriga a meter', reply_markup=keyb)
+    await update.effective_chat.send_message('A puta mensaxede texto que me obriga a meter', reply_markup=keyb, message_thread_id=thread_id)
 
 
 async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update and update.callback_query:
 
-        example_msg = f'Recibido datos de boton: {update.callback_query.data}'
-        if update.callback_query.data == 'beer':
-            # Hai que escribir text= porque se non se pensa que o argumento é un chat_id
-            await context.bot.send_message(text='Cervexa! ' + example_msg, chat_id=update.effective_chat.id)
+        parts = update.callback_query.data.split(',')
+        command = parts[0]
+        thread_id = parts[1]
 
+        example_msg = f'Recibido datos de boton: {update.callback_query.data}'
+        if command == 'beer':
+            await beerTaker(update, context, thread_id)
             # Suprimimos o erro en caso de timeout
             # (prefiro isto a un try/except que non fai nada coa excepcion)
             with suppress(telegram.error.BadRequest):
                 await update.callback_query.answer('Popup molon de birra')
-        else:
+        elif command == 'bill':
             # Hai que escribir text= porque se non se pensa que o argumento é un chat_id
-            await context.bot.send_message(text='Toca pagar! ' + example_msg, chat_id=update.effective_chat.id)
+            await endDinner(update,context, thread_id)
+            with suppress(telegram.error.BadRequest):
+                await update.callback_query.answer('Popup molon de dinero')
+        elif command == 'order':
+            await roundOrder(update,context, thread_id)
             with suppress(telegram.error.BadRequest):
                 await update.callback_query.answer('Popup molon de dinero')
 
 
-
-async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE, id_thread):
     global orderRound, fullOrder, hasDinnerStarted
-    thread_id = update.message.message_thread_id
+    thread_id = update.message.message_thread_id if update.message.message_thread_id is not None else id_thread
     if hasDinnerStarted:
         request_user = await get_user(update, context)
 
@@ -194,10 +206,10 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
             return
 
 
-async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE, id_thread):
     global fullOrder, hasDinnerStarted, orderRound
     finalBill = {}
-    thread_id = update.message.message_thread_id
+    thread_id = update.message.message_thread_id if update.message.message_thread_id is not None else id_thread
     with open('menu.json') as f:
         data = json.load(f)
 
@@ -265,8 +277,8 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 hasDinnerStarted = False
 
 
-async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    thread_id = update.message.message_thread_id
+async def roundOrder(update: Update, context: ContextTypes.DEFAULT_TYPE, id_thread):
+    thread_id = update.message.message_thread_id if update.message is not None else id_thread
     global hasDinnerStarted, orderRound, fullOrder
     if hasDinnerStarted:
         orderMessage = "\n".join([f"{value} - {names[key]}" for key, value in orderRound.items()])
@@ -342,7 +354,7 @@ async def changeMenu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def get_thread_id(update):
-    thread_id = update.message.message_thread_id
+    thread_id = update.message.message_thread_id if update.message is not None else id_thread
     return thread_id
 
 

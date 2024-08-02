@@ -10,6 +10,7 @@ from karma import kup, kdown, kshow, klist
 from dinner import startDinner, roundOrder, changePrice, endDinner, beerTaker, changeMenu, dinnerOrder, removeItemOrder, \
     show_dinner_keyboard, dinnerkeyb_handler
 import tracemalloc
+from dotenv import load_dotenv
 import os
 tracemalloc.start()
 
@@ -64,4 +65,5 @@ def main():
 
 
 if __name__ == '__main__':
+    load_dotenv()
     main()
