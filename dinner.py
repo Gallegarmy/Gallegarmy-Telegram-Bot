@@ -44,6 +44,7 @@ def async_only_dinner_chat(func):
     y siempre sumaría valor al valor ya contenido en la entrada.
 """
 fullOrder = defaultdict(default_factory)
+beerOrder = defaultdict(int)
 
 with open("menu.json", 'r', encoding='utf-8') as archive:
     menu = json.load(archive)
@@ -74,8 +75,8 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             part = orderMessage[i:i + MAX_MESSAGE_LENGTH]
 
         keyb = InlineKeyboardMarkup([
-            [InlineKeyboardButton('\U0001F37A', callback_data=f'beer'), InlineKeyboardButton('\U0000261D', callback_data=f'order')],
-            
+            [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
+            [InlineKeyboardButton('\U0001F37D', callback_data='dinner')],            
         ])
         await update.effective_chat.send_message(part, reply_markup=keyb, message_thread_id=thread_id)
 
@@ -99,6 +100,7 @@ async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYP
     thread_id = update.message.message_thread_id
     keyb = InlineKeyboardMarkup([
         [InlineKeyboardButton('\U0001F37A', callback_data='beer'), InlineKeyboardButton('\U0001F4B6', callback_data='bill')],
+        [InlineKeyboardButton('\U0001F37D', callback_data='dinner')],
     ])
     await update.effective_chat.send_message('A puta mensaxede texto que me obriga a meter', reply_markup=keyb, message_thread_id=thread_id)
 
@@ -108,7 +110,6 @@ async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         command = update.callback_query.data
 
-        example_msg = f'Recibido datos de boton: {update.callback_query.data}'
         if command == 'beer':
             await beerTaker(update, context)
             # Suprimimos o erro en caso de timeout
@@ -119,22 +120,33 @@ async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await endDinner(update,context)
             with suppress(telegram.error.BadRequest):
                 await update.callback_query.answer('Popup molon de dinero')
-        elif command == 'order':
-            await roundOrder(update,context)
+        elif command == 'dinner':
+            await dinnerTaker(update,context)
             with suppress(telegram.error.BadRequest):
-                await update.callback_query.answer('Popup molon de dinero')
+                await update.callback_query.answer('Popup molon de comida')
 
 
 async def beerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global orderRound, fullOrder, hasDinnerStarted
+    global orderRound, fullOrder, hasDinnerStarted, beerOrder
 
     if hasDinnerStarted:
         if update and update.callback_query:
             request_user = await get_user(update, context)
 
-            fullOrder[request_user][1906] += 1
+            beerOrder[request_user] += 1
             await context.bot.send_message(chat_id=update.effective_chat.id,
                                            text=f'Agregado un vaso de cervexa para {request_user}', message_thread_id=await get_thread_id(update))
+
+async def dinnerTaker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global fullOrder
+    request_user = await get_user(update, context)
+    if request_user in fullOrder:
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                           text=f'O usuario{request_user}, xa está rexistrado para cear.', message_thread_id=await get_thread_id(update))
+    else:
+        fullOrder[request_user] = {}
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                           text=f'Rexistrado o usuario {request_user} para a cea.', message_thread_id=await get_thread_id(update))
 
 @async_only_dinner_chat
 async def dinnerOrder(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -214,7 +226,7 @@ async def addOrRemove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
 
 @async_only_dinner_chat
 async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global fullOrder, hasDinnerStarted, orderRound
+    global fullOrder, hasDinnerStarted, orderRound, beerOrder
     finalBill = {}
     
     # Cargar los datos del menú
@@ -233,7 +245,6 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 totalbeer = 0
                 beeramount = 0
                 beerusers = []
-                
                 for user in fullOrder:
                     user_order = fullOrder.get(user, {})
                     finalBill[user] = 0
@@ -246,11 +257,16 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 finalBill[user] += item_price * user_order[item_id]
                         elif item_id >= 200 and item_id < 300 and category in ["postres", "bebidasypostres"]:
                             finalBill[user] += item_price * user_order[item_id]
-                        elif item_id == 1906 and category in ["bebidas", "bebidasypostres"]:
-                            beerusers.append(user)
-                            beeramount += user_order.get(1906, 0)
+                        #elif item_id == 1906 and category in ["bebidas", "bebidasypostres"]:
+                        #    beerusers.append(user)
+                        #    beeramount += user_order.get(1906, 0)
                         else:
                             totalbill += item_price * user_order[item_id]
+
+                for key, value in beerOrder.items():
+                    beeramount += value
+                    if not key in finalBill:
+                        finalBill[user] = 0
                 
                 if category in ["bebidas", "postres", "bebidasypostres"]:
                     personaltotal = totalbill / len(fullOrder)
@@ -260,8 +276,8 @@ async def endDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if beeramount > 0:
                         personalbeer = totalbeer / beeramount
                         for user in finalBill:
-                            if user in beerusers:
-                                finalBill[user] += personalbeer * fullOrder[user].get(1906, 0)
+                            if user in beerOrder:
+                                finalBill[user] += personalbeer * beerOrder[user]
                 
                 billMessage = "\n".join([f"{key} - {round(float(value), 2)}€" for key, value in finalBill.items()])
                 await context.bot.send_message(chat_id=update.effective_message.chat_id, text=billMessage, message_thread_id=await get_thread_id(update))

@@ -8,7 +8,7 @@ from pina import pinacolada
 from fiestas import festivos
 from karma import kup, kdown, kshow, klist
 from dinner import startDinner, roundOrder, changePrice, endDinner, beerTaker, changeMenu, dinnerOrder, removeItemOrder, \
-    show_dinner_keyboard, dinnerkeyb_handler
+    show_dinner_keyboard, dinnerkeyb_handler, dinnerTaker
 import tracemalloc
 from dotenv import load_dotenv
 import os
@@ -25,6 +25,7 @@ def main():
 
     commands = {
         'beer': beerTaker,
+        'dinner': dinnerTaker,
         'cerveza': cerveza,
         'cervezahora': cervezahora,
         'cervezaasistencia': cervezaasistencia,
