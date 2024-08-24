@@ -12,7 +12,7 @@ def first_friday_of_month(year, month):
     return first_friday_date
 
 
-async def beer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_year = datetime.now().year
     current_month = datetime.now().month
     thread_id = update.message.message_thread_id if update.message else None
@@ -65,7 +65,7 @@ async def beer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     database.close()
 
 
-async def beer_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -96,7 +96,7 @@ async def beer_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
 
-async def beer_place(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -127,7 +127,7 @@ async def beer_place(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
 
-async def beer_map(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -158,7 +158,7 @@ async def beer_map(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
 
-async def beer_attendance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -189,7 +189,7 @@ async def beer_attendance(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
 
-async def beer_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
