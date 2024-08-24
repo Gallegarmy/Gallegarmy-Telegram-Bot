@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler
 
 from start import start
+from status import ping
 from newmembers import new_members
 from cerveza import cerveza, cervezahora, cervezalugar, cervezamapa, cervezaasistencia,cervezalink
 from help import help
@@ -47,6 +48,7 @@ def main():
         'roundOrder': roundOrder,
         'start': start,
         'startdinner': startDinner,
+        'ping': ping
     }
 
     for comm_string, funct in commands.items():
