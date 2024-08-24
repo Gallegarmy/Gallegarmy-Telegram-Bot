@@ -15,7 +15,7 @@ dependencies = [
   "urllib3>=2.2.2",
   "requests>=2.32.3",
 ]
-description = "Add your description here"
+description = "A Telegram bot for the SysArmy Galicia group."
 name = "telegram-bot"
 readme = "README.md"
 requires-python = ">=3.10"
