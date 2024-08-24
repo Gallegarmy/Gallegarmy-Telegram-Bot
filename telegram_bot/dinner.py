@@ -82,10 +82,10 @@ async def startDinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyb = InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("\U0001F37A", callback_data="beer"),
-                    InlineKeyboardButton("\U0001F4B6", callback_data="bill"),
+                    InlineKeyboardButton("\U0001f37a", callback_data="beer"),
+                    InlineKeyboardButton("\U0001f4b6", callback_data="bill"),
                 ],
-                [InlineKeyboardButton("\U0001F37D", callback_data="dinner")],
+                [InlineKeyboardButton("\U0001f37d", callback_data="dinner")],
             ]
         )
         await update.effective_chat.send_message(
@@ -113,10 +113,10 @@ async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYP
     keyb = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("\U0001F37A", callback_data="beer"),
-                InlineKeyboardButton("\U0001F4B6", callback_data="bill"),
+                InlineKeyboardButton("\U0001f37a", callback_data="beer"),
+                InlineKeyboardButton("\U0001f4b6", callback_data="bill"),
             ],
-            [InlineKeyboardButton("\U0001F37D", callback_data="dinner")],
+            [InlineKeyboardButton("\U0001f37d", callback_data="dinner")],
         ]
     )
     await update.effective_chat.send_message(
@@ -128,7 +128,6 @@ async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def dinnerkeyb_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update and update.callback_query:
-
         command = update.callback_query.data
 
         if command == "beer":
