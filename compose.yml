@@ -1,0 +1,10 @@
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - ./sqlite.db:/app/data
+    restart: unless-stopped

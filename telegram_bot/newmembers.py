@@ -1,6 +1,6 @@
-from telegram import Update, Chat
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
-import threading, random
+from telegram import Update
+from telegram.ext import ContextTypes
+import random
 
 
 welcome_messages = [
@@ -14,7 +14,7 @@ welcome_messages = [
 
 
 async def new_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.message.new_chat_members:
+    if update.message and update.message.new_chat_members:
         chat_id = update.message.chat_id
         welcome_message = random.choice(welcome_messages).format(
             username=update.message.new_chat_members[0].username
