@@ -1,107 +1,115 @@
-# Bot de Telegram en Python
+# Sysarmy Telegram Bot
 
-Este es el bot de Telegram de Sysarmy Galicia. Este bot está diseñado para manejar la gestión de karma entre usuarios, información sobre eventos, dividir la cuenta en las AdminCañas y algunas opciones divertidas para interactuar.
+This is the Sysarmy Galicia Telegram bot. This bot is designed to manage karma between users, provide event information, split the bill during AdminCañas, and includes some fun interactive options.
 
-## Indice
+## Index
 
-- [Requisitos](#requisitos)
-- [Instalación](#instalación)
-- [Comandos](#comandos)
-- [Contribución](#contribución)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Commands](#commands)
+- [Contribution](#contribution)
 
-## Requisitos
+## Requirements
 
-- Python 3.7 o superior
-- Librería python-telegram-bot
-- Cualquier otra dependencia especificada en el archivo requirements.txt
+- Python 3.10 or higher
+- Dependencies specified in the `pyproject.toml` file
 
-## Instalación
+## Installation
 
-1. **Clona el repositorio en tu máquina local:**
+1. **Clone the repository to your local machine:**
 
-```bash
-git clone https://github.com/tuusuario/tu-repositorio.git
-cd tu-repositorio
-```
+2. **Install the necessary dependencies using `uv`**: https://docs.astral.sh/uv/getting-started/installation/
 
-2. **Instala las dependencias necesarias:**
+   First, install `uv` if you haven’t already:
 
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-3. **Configura el bot con tu token de Telegram. Crea un archivo .env en el directorio raíz y añade la siguiente línea:**
+   Then, install the project dependencies with `uv`:
 
-```bash
-TELEGRAM_TOKEN=tu_token_aqui
-```
+   ```bash
+    make install
+   ```
 
-4. **Ejecuta el bot:**
+   OR
 
-```bash
-python main.py
-```
+   ```bash
+    uv sync --frozen
+   ```
 
-## Comandos
-
-**Comandos generales:**
-
-- /start: Este comando envía un mensaje de bienvenida cuando un usuario inicia una conversación con el bot. Se utiliza para corroborar que el bot esté funcionando.
-
-- /cerveza: Proporciona información sobre el próximo evento de "admin cañas", nuestro evento social mensual (El 1º viernes de cada mes ;) ).
-
-- /pineapple: Envía un mensaje divertido sobre la piña, considerada por algunos como un manjar tropical.
-
-- /help: Muestra una lista de todos los comandos habilitados en el bot, brindando una guía rápida para los usuarios.
-
-- /festivos: Informa sobre el próximo día festivo en Galicia. Este comando acepta un parámetro opcional (str) para indicar un departamento específico y obtener detalles sobre fiestas regionales.
+3. **Configure the bot with your Telegram token. Create a `.env` file in the root directory and add the following line:**
 
 ```bash
-/festivos Arteixo
+BOT_TOKEN=your_token_here
 ```
 
-**Comandos de Karma:**
+4. **Run the bot using `uvicorn`:**
 
-- /kup [usuario]: Aumenta el karma de un usuario o cosa en uno. Ideal para reconocer buenas acciones o comentarios.
+```bash
+uv run main.py
+```
+
+## Commands
+
+**General Commands:**
+
+- **/start**: Sends a welcome message when a user initiates a conversation with the bot. Used to verify that the bot is functioning.
+
+- **/beer**: Provides information about the next "AdminCañas" event, our monthly social gathering (First Friday of each month 😉).
+
+- **/pineapple**: Sends a fun message about pineapple, considered a tropical delicacy by some.
+
+- **/help**: Displays a list of all enabled commands in the bot, providing a quick guide for users.
+
+- **/holidays**: Informs about the next holiday in Galicia. This command accepts an optional parameter (str) to indicate a specific department and get details about regional holidays.
+
+```bash
+/holidays Arteixo
+```
+
+**Karma Commands:**
+
+- **/kup [user]**: Increases the karma of a user or thing by one. Ideal for recognizing good actions or comments.
 
 ```bash
 /kup @Qrow01
 ```
 
-- /kdown [usuario]: Disminuye el karma de un usuario o cosa en uno. Se utiliza para marcar comportamientos o comentarios inapropiados.
+- **/kdown [user]**: Decreases the karma of a user or thing by one. Used to mark inappropriate behavior or comments.
 
 ```bash
 /kdown Java
 ```
 
-\*/kshow [usuario]: Muestra el nivel de karma actual de un usuario o cosa en específico.
+- **/kshow [user]**: Displays the current karma level of a specific user or thing.
 
 ```bash
 /kshow @Qrow01
 ```
 
-- /klist: Muestra un ranking de usuarios y cosas con más y menos karma, permitiendo ver quién es el más apreciado (o menos) en el grupo.
+- **/klist**: Shows a ranking of users and things with the most and least karma, allowing you to see who is most (or least) appreciated in the group.
 
-**Comandos de Menú:**
+**Menu Commands:**
 
-(Estos comandos solo están habilitados para el canal 'Pedidos comida', el cual permanece cerrado hasta el día de las admin cañas. Si quieres adaptar este bot para tus propios prositos modifica el FOOD_THREAD_ID en dinner.py con tu propio thread_id)
+(These commands are only enabled for the 'Food Orders' channel, which remains closed until the day of AdminCañas. If you want to adapt this bot for your own purposes, modify the `FOOD_THREAD_ID` in `dinner.py` with your own thread ID.)
 
-(Los administradores deben iniciar la cena para que estos comandos se habiliten)
+(Administrators must start the dinner for these commands to be enabled.)
 
-- /order [id_number]: Permite a los usuarios ordenar un ítem del menú basado en un número de identificación proporcionado. Adicionalmente se puede proporcionar un número (int) como segundo argumento para ordernar más de un item
+- **/order [id_number]**: Allows users to order a menu item based on a provided identification number. An additional number (int) can be provided as a second argument to order more than one item.
 
 ```bash
 /order 23 2
 ```
 
-- /beer: Agrega un vaso de cerveza a la cuenta del usuario que envía el comando. Este comando es útil para dividir la cuenta al final de un evento, gracias a la idea de @jjqrs.
+- **/beer**: Adds a beer to the account of the user sending the command. This command is useful for splitting the bill at the end of an event, thanks to the idea of @jjqrs.
 
-## Contribución
+## Contribution
 
-Las contribuciones son bienvenidas. Si deseas mejorar este proyecto, sigue estos pasos:
+Contributions are welcome. If you want to improve this project, follow these steps:
 
-1. Haz un fork del repositorio.
-2. Crea una nueva rama (git checkout -b feature/nueva-funcionalidad).
-3. Realiza tus cambios y haz un commit (git commit -am 'Agrega nueva funcionalidad').
-4. Haz un push a la rama (git push origin feature/nueva-funcionalidad).
-5. Crea un Pull Request.
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/new-feature`).
+3. Make your changes and commit them (`git commit -am 'Add new feature'`).
+4. Push to the branch (`git push origin feature/new-feature`).
+5. Create a Pull Request.
