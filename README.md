@@ -28,8 +28,10 @@ This is the Sysarmy Galicia Telegram bot. This bot is designed to manage karma b
 
    Then, install the project dependencies with `uv`:
 
+   You can use [Just](https://github.com/casey/just) to install the dependencies:
+
    ```bash
-    make install
+    just install
    ```
 
    OR
