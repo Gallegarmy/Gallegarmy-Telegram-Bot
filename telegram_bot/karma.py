@@ -8,6 +8,18 @@ karmaLimit = defaultdict(int)
 last_cleared_date = None
 
 
+def initialize_db():
+    database = sqlite3.connect("sqlite.db")
+    cursor = database.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS karma (
+            user TEXT PRIMARY KEY,
+            karma INTEGER DEFAULT 0
+        )
+    ''')
+    database.commit()
+    database.close()
+
 async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global karmaLimit, last_cleared_date
     now = datetime.datetime.now()
