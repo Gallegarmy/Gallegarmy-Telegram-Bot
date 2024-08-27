@@ -9,7 +9,7 @@ last_cleared_date = None
 
 
 def initialize_db():
-    database = sqlite3.connect("sqlite.db")
+    database = sqlite3.connect("/app/sqlite.db")
     cursor = database.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS karma (
@@ -43,7 +43,7 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     return
                 
-                database = sqlite3.connect("./telegram_bot/sqlite.db")
+                database = sqlite3.connect("/app/sqlite.db")
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE user = ?"
                 cursor.execute(SQLUsers, (usuario.lower(),))
@@ -99,7 +99,7 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     return
                 
-                database = sqlite3.connect("./telegram_bot/sqlite.db")
+                database = sqlite3.connect("/app/sqlite.db")
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE user = ?"
                 cursor.execute(SQLUsers, (usuario.lower(),))
@@ -139,7 +139,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
             usuario = str(context.args[0])
             if usuario[0] == "@":
                 usuario = usuario[1:]
-            database = sqlite3.connect("./telegram_bot/sqlite.db")
+            database = sqlite3.connect("/app/sqlite.db")
             cursor = database.cursor()
             SQLUsers = "SELECT * FROM karma WHERE user = ?"
             cursor.execute(SQLUsers, (usuario.lower(),))
@@ -175,7 +175,7 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.effective_chat:
         thread_id = update.message.message_thread_id
         karma_list = "Usuarios con más karma:\n\n"
-        database = sqlite3.connect("./telegram_bot/sqlite.db")
+        database = sqlite3.connect("/app/sqlite.db")
         cursor = database.cursor()
         SQLPrimeros = "SELECT user, karma FROM karma ORDER BY karma DESC LIMIT 3"
         cursor.execute(SQLPrimeros)
