@@ -32,7 +32,7 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
             usuario = str(context.args[0])
             if usuario[0] == "@":
                 usuario = usuario[1:]
-            if usuario != str(update.message.from_user.username).lower():
+            if usuario.lower() != str(update.message.from_user.username).lower():
                 if update.message.from_user.username not in karmaLimit:
                     karmaLimit[update.message.from_user.username] = 5
                 if karmaLimit[update.message.from_user.username] == 0:
@@ -88,7 +88,7 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
             usuario = str(context.args[0])
             if usuario[0] == "@":
                 usuario = usuario[1:]
-            if usuario != str(update.message.from_user.username).lower():
+            if usuario.lower() != str(update.message.from_user.username).lower():
                 if update.message.from_user.username not in karmaLimit:
                     karmaLimit[update.message.from_user.username] = 5
                 if karmaLimit[update.message.from_user.username] == 0:
