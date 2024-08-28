@@ -20,9 +20,7 @@ from telegram_bot.cerveza import (
 from telegram_bot.help import help
 from telegram_bot.pina import pinacolada
 from telegram_bot.fiestas import festivos
-from telegram_bot.karma import kup, kdown, kshow, klist, initialize_db
-
-initialize_db()
+from telegram_bot.karma import kup, kdown, kshow, klist
 from telegram_bot.dinner import (
     start_dinner,
     round_order,
