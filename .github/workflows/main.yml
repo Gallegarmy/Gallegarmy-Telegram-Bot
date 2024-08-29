@@ -33,10 +33,15 @@ jobs:
           echo "REPO_NAME_LOWER=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
           echo "OWNER_NAME_LOWER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: Build Docker Telegram Bot Image
         run: |
-          docker buildx build --platform linux/amd64 --load -f .docker/Dockerfile -t ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest .
+          docker buildx build --platform linux/amd64 --load -f .docker/telegram_bot/Dockerfile -t ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest .
 
-      - name: Push Docker image to GitHub Container Registry
+      - name: Build Docker MySQL Image
+        run: |
+          docker buildx build --platform linux/amd64 --load -f .docker/mysql/Dockerfile --build-arg BASE_DIRECTORY=.docker -t ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}/mysql:8.0.39 .
+
+      - name: Push Docker images to GitHub Container Registry
         run: |
           docker push ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest
+          docker push ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}/mysql:8.0.39

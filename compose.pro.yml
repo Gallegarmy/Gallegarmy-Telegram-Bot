@@ -13,7 +13,12 @@ networks:
 
 services:
   db:
-    image: mysql:latest
+    image: ghcr.io/gallegarmy/gallegarmy-telegram-bot/mysql:8.0.39
+    build:
+      context: .
+      dockerfile: .docker/mysql/Dockerfile
+      args:
+        BASE_DIRECTORY: .docker
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -21,7 +26,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sysarmy
     restart: unless-stopped
@@ -30,7 +34,7 @@ services:
     image: ghcr.io/gallegarmy/gallegarmy-telegram-bot:latest
     build:
       context: .
-      dockerfile: .docker/Dockerfile
+      dockerfile: .docker/telegram_bot/Dockerfile
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       BOT_TOKEN: ${BOT_TOKEN}
