@@ -18,10 +18,49 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if context.args:
             usuario = str(context.args[0])
             if usuario[0] == "@":
-                usuario = usuario[1:]
-
-                
-            if usuario.lower() != str(update.message.from_user.username).lower():
+                usuario = usuario[1:]                
+                if usuario.lower() != str(update.message.from_user.username).lower():
+                    if update.message.from_user.username not in karmaLimit:
+                        karmaLimit[update.message.from_user.username] = 5
+                    if karmaLimit[update.message.from_user.username] == 0:
+                        await context.bot.send_message(
+                            chat_id=update.effective_chat.id,
+                            text="Xa non podes asignar máis karma hoxe",
+                            message_thread_id=thread_id,
+                        )
+                        return
+                    
+                    database = mysql.connector.connect(
+                        host="db",
+                        user="sysarmy",
+                        password="gallegarmy",
+                        database="karma_db"
+                    )
+                    cursor = database.cursor()
+                    SQLUsers = "SELECT * FROM karma WHERE word = %s"
+                    cursor.execute(SQLUsers, (usuario.lower(),))
+                    usuarios = cursor.fetchall()
+                    if len(usuarios) == 0:
+                        SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,1, true)"
+                        cursor.execute(SQLCreateuser, (usuario.lower(),))
+                    else:
+                        SQLAddKarma = "UPDATE karma SET karma = karma + 1 WHERE word = %s"
+                        cursor.execute(SQLAddKarma, (usuario.lower(),))
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"+1 Karma para {usuario.lower()}",
+                        message_thread_id=thread_id,
+                    )
+                    database.commit()
+                    database.close()
+                    karmaLimit[update.message.from_user.username] -= 1
+                else:
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text="Non sexas tan egocéntrico tío",
+                        message_thread_id=thread_id,
+                    )
+            else:
                 if update.message.from_user.username not in karmaLimit:
                     karmaLimit[update.message.from_user.username] = 5
                 if karmaLimit[update.message.from_user.username] == 0:
@@ -31,7 +70,7 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         message_thread_id=thread_id,
                     )
                     return
-                
+                    
                 database = mysql.connector.connect(
                     host="db",
                     user="sysarmy",
@@ -43,25 +82,19 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 cursor.execute(SQLUsers, (usuario.lower(),))
                 usuarios = cursor.fetchall()
                 if len(usuarios) == 0:
-                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,1, true)"
+                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,1, false)"
                     cursor.execute(SQLCreateuser, (usuario.lower(),))
                 else:
                     SQLAddKarma = "UPDATE karma SET karma = karma + 1 WHERE word = %s"
                     cursor.execute(SQLAddKarma, (usuario.lower(),))
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
-                    text=f"+1 Karma para {usuario.lower()}",
+                    text=f"+1 Karma a {usuario.lower()}",
                     message_thread_id=thread_id,
                 )
                 database.commit()
                 database.close()
                 karmaLimit[update.message.from_user.username] -= 1
-            else:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text="Non sexas tan egocéntrico tío",
-                    message_thread_id=thread_id,
-                )
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -82,7 +115,48 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
             usuario = str(context.args[0])
             if usuario[0] == "@":
                 usuario = usuario[1:]
-            if usuario.lower() != str(update.message.from_user.username).lower():
+                if usuario.lower() != str(update.message.from_user.username).lower():
+                    if update.message.from_user.username not in karmaLimit:
+                        karmaLimit[update.message.from_user.username] = 5
+                    if karmaLimit[update.message.from_user.username] == 0:
+                        await context.bot.send_message(
+                            chat_id=update.effective_chat.id,
+                            text="Xa non podes asignar máis karma hoxe",
+                            message_thread_id=thread_id,
+                        )
+                        return
+                    
+                    database = mysql.connector.connect(
+                        host="db",
+                        user="sysarmy",
+                        password="gallegarmy",
+                        database="karma_db"
+                    )
+                    cursor = database.cursor()
+                    SQLUsers = "SELECT * FROM karma WHERE word = %s"
+                    cursor.execute(SQLUsers, (usuario.lower(),))
+                    usuarios = cursor.fetchall()
+                    if len(usuarios) == 0:
+                        SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,-1, true)"
+                        cursor.execute(SQLCreateuser, (usuario.lower(),))
+                    else:
+                        SQLRemoveKarma = "UPDATE karma SET karma = karma - 1 WHERE word = %s"
+                        cursor.execute(SQLRemoveKarma, (usuario.lower(),))
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"-1 Karma para {usuario.lower()}",
+                        message_thread_id=thread_id,
+                    )
+                    database.commit()
+                    database.close()
+                    karmaLimit[update.message.from_user.username] -= 1
+                else:
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text="Non sexas tan egocéntrico tío",
+                        message_thread_id=thread_id,
+                    )
+            else:
                 if update.message.from_user.username not in karmaLimit:
                     karmaLimit[update.message.from_user.username] = 5
                 if karmaLimit[update.message.from_user.username] == 0:
@@ -92,7 +166,7 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         message_thread_id=thread_id,
                     )
                     return
-                
+                    
                 database = mysql.connector.connect(
                     host="db",
                     user="sysarmy",
@@ -104,25 +178,19 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 cursor.execute(SQLUsers, (usuario.lower(),))
                 usuarios = cursor.fetchall()
                 if len(usuarios) == 0:
-                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,-1, true)"
+                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,-1, false)"
                     cursor.execute(SQLCreateuser, (usuario.lower(),))
                 else:
                     SQLRemoveKarma = "UPDATE karma SET karma = karma - 1 WHERE word = %s"
                     cursor.execute(SQLRemoveKarma, (usuario.lower(),))
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
-                    text=f"-1 Karma para {usuario.lower()}",
+                    text=f"-1 Karma a {usuario.lower()}",
                     message_thread_id=thread_id,
                 )
                 database.commit()
                 database.close()
                 karmaLimit[update.message.from_user.username] -= 1
-            else:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text="Non sexas tan egocéntrico tío",
-                    message_thread_id=thread_id,
-                )
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -135,9 +203,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.effective_chat:
         thread_id = update.message.message_thread_id
         if context.args:
-            usuario = str(context.args[0])
-            if usuario[0] == "@":
-                usuario = usuario[1:]
+            usuario = str(context.args[0])            
             database = mysql.connector.connect(
                     host="db",
                     user="sysarmy",
@@ -145,26 +211,50 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     database="karma_db"
             )
             cursor = database.cursor()
-            SQLUsers = "SELECT * FROM karma WHERE word = %s"
-            cursor.execute(SQLUsers, (usuario.lower(),))
-            usuarios = cursor.fetchall()
-            if len(usuarios) == 0:
-                SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,0, true)"
-                cursor.execute(SQLCreateuser, (usuario.lower(),))
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"El Karma de {usuario.lower()} es 0",
-                    message_thread_id=thread_id,
-                )
+            if usuario[0] == "@":
+                usuario = usuario[1:]
+                SQLUsers = "SELECT * FROM karma WHERE word = %s"
+                cursor.execute(SQLUsers, (usuario.lower(),))
+                usuarios = cursor.fetchall()
+                if len(usuarios) == 0:
+                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,0, true)"
+                    cursor.execute(SQLCreateuser, (usuario.lower(),))
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"El Karma de {usuario.lower()} es 0",
+                        message_thread_id=thread_id,
+                    )
+                else:
+                    SQLShowKarma = "SELECT karma FROM karma WHERE word = %s"
+                    cursor.execute(SQLShowKarma, (usuario.lower(),))
+                    karma = cursor.fetchone()
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"El Karma de {usuario.lower()} es {karma}",
+                        message_thread_id=thread_id,
+                    )
             else:
-                SQLShowKarma = "SELECT karma FROM karma WHERE word = %s"
-                cursor.execute(SQLShowKarma, (usuario.lower(),))
-                karma = cursor.fetchone()
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"El Karma de {usuario.lower()} es {karma}",
-                    message_thread_id=thread_id,
-                )
+                usuario = usuario[1:]
+                SQLUsers = "SELECT * FROM karma WHERE word = %s"
+                cursor.execute(SQLUsers, (usuario.lower(),))
+                usuarios = cursor.fetchall()
+                if len(usuarios) == 0:
+                    SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,0, false)"
+                    cursor.execute(SQLCreateuser, (usuario.lower(),))
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"El Karma de {usuario.lower()} es 0",
+                        message_thread_id=thread_id,
+                    )
+                else:
+                    SQLShowKarma = "SELECT karma FROM karma WHERE word = %s"
+                    cursor.execute(SQLShowKarma, (usuario.lower(),))
+                    karma = cursor.fetchone()
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=f"El Karma de {usuario.lower()} es {karma}",
+                        message_thread_id=thread_id,
+                    )
             database.commit()
             database.close()
         else:
@@ -186,14 +276,26 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     database="karma_db"
         )
         cursor = database.cursor()
-        SQLPrimeros = "SELECT word, karma FROM karma ORDER BY karma DESC LIMIT 3"
+        SQLPrimeros = "SELECT word, karma FROM karma WHERE is_user = true ORDER BY karma DESC LIMIT 3"
         cursor.execute(SQLPrimeros)
         users = cursor.fetchall()
         for user in users:
             karma_list += f"{user[0]} - {user[1]}\n"
+        karma_list += "\nPalabras con mas karma:\n\n"    
+        SQLPrimerosPalabras = "SELECT word, karma FROM karma WHERE is_user = false ORDER BY karma DESC LIMIT 3"
+        cursor.execute(SQLPrimerosPalabras)
+        users = cursor.fetchall()
+        for user in users:
+            karma_list += f"{user[0]} - {user[1]}\n"
         karma_list += "\nUsuarios con menos karma:\n\n"
-        SQLUltimos = "SELECT word, karma FROM karma ORDER BY karma ASC LIMIT 3"
+        SQLUltimos = "SELECT word, karma FROM karma WHERE is_user = true ORDER BY karma ASC LIMIT 3"
         cursor.execute(SQLUltimos)
+        users = cursor.fetchall()
+        for user in users:
+            karma_list += f"{user[0]} - {user[1]}\n"
+        karma_list += "\nPalabras con menos karma:\n\n"
+        SQLUltimasPalabras = "SELECT word, karma FROM karma WHERE is_user = false ORDER BY karma ASC LIMIT 3"
+        cursor.execute(SQLUltimasPalabras)
         users = cursor.fetchall()
         for user in users:
             karma_list += f"{user[0]} - {user[1]}\n"
