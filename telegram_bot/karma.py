@@ -1,3 +1,5 @@
+import os
+
 import mysql.connector
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -50,10 +52,10 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         return
 
                     database = mysql.connector.connect(
-                        host="db",
-                        user="sysarmy",
-                        password="gallegarmy",
-                        database="karma_db",
+                        host=os.environ.get('MYSQL_HOST'),
+                        user=os.environ.get('MYSQL_USER'),
+                        password=os.environ.get('MYSQL_PASSWORD'),
+                        database=os.environ.get('MYSQL_DATABASE'),
                     )
                     cursor = database.cursor()
                     SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -107,10 +109,10 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
                 database = mysql.connector.connect(
-                    host="db",
-                    user="sysarmy",
-                    password="gallegarmy",
-                    database="karma_db",
+                    host=os.environ.get('MYSQL_HOST'),
+                    user=os.environ.get('MYSQL_USER'),
+                    password=os.environ.get('MYSQL_PASSWORD'),
+                    database=os.environ.get('MYSQL_DATABASE'),
                 )
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -189,10 +191,10 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         return
 
                     database = mysql.connector.connect(
-                        host="db",
-                        user="sysarmy",
-                        password="gallegarmy",
-                        database="karma_db",
+                        host=os.environ.get('MYSQL_HOST'),
+                        user=os.environ.get('MYSQL_USER'),
+                        password=os.environ.get('MYSQL_PASSWORD'),
+                        database=os.environ.get('MYSQL_DATABASE'),
                     )
                     cursor = database.cursor()
                     SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -247,10 +249,10 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
                 database = mysql.connector.connect(
-                    host="db",
-                    user="sysarmy",
-                    password="gallegarmy",
-                    database="karma_db",
+                    host=os.environ.get('MYSQL_HOST'),
+                    user=os.environ.get('MYSQL_USER'),
+                    password=os.environ.get('MYSQL_PASSWORD'),
+                    database=os.environ.get('MYSQL_DATABASE'),
                 )
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -307,7 +309,10 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.debug("Show karma for user/word requested", target=usuario)
 
             database = mysql.connector.connect(
-                host="db", user="sysarmy", password="gallegarmy", database="karma_db"
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
             )
             cursor = database.cursor()
 
@@ -386,7 +391,10 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
         karma_list = "Usuarios con más karma:\n\n"
 
         database = mysql.connector.connect(
-            host="db", user="sysarmy", password="gallegarmy", database="karma_db"
+            host=os.environ.get('MYSQL_HOST'),
+            user=os.environ.get('MYSQL_USER'),
+            password=os.environ.get('MYSQL_PASSWORD'),
+            database=os.environ.get('MYSQL_DATABASE'),
         )
         cursor = database.cursor()
 
