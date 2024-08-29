@@ -25,4 +25,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Use the CMD instruction to start the application
-CMD ["python", "main.py"]
+CMD ["python", "-u","main.py"]
