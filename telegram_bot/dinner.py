@@ -6,6 +6,9 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, Message
 from telegram.ext import ContextTypes
 import json
 from collections import defaultdict
+import structlog
+
+logger = structlog.get_logger()
 
 FOOD_THREAD_ID = 4226
 
@@ -25,7 +28,18 @@ def async_only_dinner_chat(func):
             update.effective_message
             and update.effective_message.message_thread_id == FOOD_THREAD_ID
         ):
+            logger.info(
+                "Handling request in Food Topic thread",
+                user_id=update.effective_user.id if update.effective_user else None,
+                chat_id=update.effective_chat.id if update.effective_chat else None,
+            )
             return await func(update, context)
+        else:
+            logger.warning(
+                "Request not in Food Topic thread",
+                user_id=update.effective_user.id if update.effective_user else None,
+                chat_id=update.effective_chat.id if update.effective_chat else None,
+            )
 
     return wrapper
 
@@ -46,6 +60,11 @@ ADMINS = [line.strip() for line in open("admins.txt")]
 @async_only_dinner_chat
 async def start_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global hasDinnerStarted
+    logger.info(
+        "Start dinner command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     thread_id = await get_thread_id(update)
     part = None
 
@@ -99,6 +118,11 @@ def is_quantity_in_range(quantity):
 
 
 async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Show dinner keyboard command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     thread_id = update.message.message_thread_id if update.message else None
     keyb = InlineKeyboardMarkup(
         [
@@ -121,6 +145,13 @@ async def dinner_keyboard_handler(update: Update, context: ContextTypes.DEFAULT_
     if update and update.callback_query:
         command = update.callback_query.data
 
+        logger.info(
+            "Dinner keyboard command received",
+            command=command,
+            user_id=update.effective_user.id if update.effective_user else None,
+            chat_id=update.effective_chat.id if update.effective_chat else None,
+        )
+
         if command == "beer":
             await beer_taker(update, context)
             with suppress(telegram.error.BadRequest):
@@ -138,6 +169,12 @@ async def dinner_keyboard_handler(update: Update, context: ContextTypes.DEFAULT_
 async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global orderRound, fullOrder, hasDinnerStarted, beerOrder
 
+    logger.info(
+        "Beer taker command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     if hasDinnerStarted:
         if update and update.callback_query:
             request_user = await get_user(update, context)
@@ -153,6 +190,13 @@ async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder
+
+    logger.info(
+        "Dinner taker command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     request_user = await get_user(update, context)
     if request_user in fullOrder:
         if update.effective_chat:
@@ -183,6 +227,13 @@ async def remove_item_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
     global fullOrder, hasDinnerStarted, orderRound
+
+    logger.info(
+        "Add or remove item command received",
+        add=add,
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
 
     if not add and (
         update.message
@@ -279,6 +330,12 @@ async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add)
 async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder, hasDinnerStarted, orderRound, beerOrder
     finalBill = {}
+
+    logger.info(
+        "End dinner command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
 
     with open("menu.json") as f:
         data = json.load(f)
@@ -384,6 +441,11 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @async_only_dinner_chat
 async def round_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global hasDinnerStarted, orderRound, fullOrder
+    logger.info(
+        "Round order command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     if hasDinnerStarted:
         if context.chat_data and "order_msg" in context.chat_data:
             del context.chat_data["order_msg"]
@@ -392,6 +454,11 @@ async def round_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global orderRound
+    logger.info(
+        "Show order command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     order_msg = None
     orderMessage = "PEDIDO:\n\n"
     orderMessage += "\n".join(
@@ -418,6 +485,11 @@ async def show_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @async_only_dinner_chat
 async def change_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Change price command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     thread_id = update.message.message_thread_id if update.message else None
     f = open("menu.json")
     data = json.load(f)
@@ -459,6 +531,11 @@ async def change_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @async_only_dinner_chat
 async def change_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Change menu command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     thread_id = await get_thread_id(update)
 
     try:
@@ -553,6 +630,11 @@ async def open_menu_file(update, context):
 
 
 async def get_user(update, context):
+    logger.info(
+        "Get user function called",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
     user = None
     if update.message and update.message.from_user:
         user = update.message.from_user

@@ -2,6 +2,9 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import sqlite3
 from datetime import timedelta, datetime
+import structlog
+
+logger = structlog.get_logger()
 
 
 def first_friday_of_month(year, month):
@@ -9,10 +12,22 @@ def first_friday_of_month(year, month):
     first_day_of_month = current_date.weekday()
     offset_to_friday = (4 - first_day_of_month) % 7
     first_friday_date = current_date + timedelta(days=offset_to_friday)
+    logger.debug(
+        "Calculated first Friday of month",
+        year=year,
+        month=month,
+        date=first_friday_date,
+    )
     return first_friday_date
 
 
 async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     current_year = datetime.now().year
     current_month = datetime.now().month
     thread_id = update.message.message_thread_id if update.message else None
@@ -26,6 +41,7 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
         target_date = first_friday_of_month(current_year, current_month)
 
     formatted_date = target_date.strftime("%d-%m-%Y")
+    logger.debug("Target date determined", target_date=formatted_date)
 
     database = sqlite3.connect("sqlite.db")
     cursor = database.cursor()
@@ -35,6 +51,7 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event = cursor.fetchone()
 
     if event is None:
+        logger.info("No event found for date", date=formatted_date)
         SQLCreateEvent = (
             "INSERT INTO events (fecha, hora, link, lugar, maps) VALUES (?, '19:00', "
             "'https://www.meetup.com/es-ES/gallegarmy/', "
@@ -48,7 +65,9 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Ubicación: Fire Capitano (Rúa Federico García, 2, 15009 A Coruña)\n\n"
             f"https://maps.app.goo.gl/ao8dejkwv74QV6eb7"
         )
+        logger.info("New event created", date=formatted_date)
     else:
+        logger.info("Event found for date", date=formatted_date)
         event_message = (
             f"Próximo evento de Admin Cañas:\n\nFecha: {event[0]}\n\nHora: {event[1]}\n\n"
             f"Meetup: {event[2]}\n\nUbicación: {event[3]}\n\n{event[4]}"
@@ -60,12 +79,22 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=event_message,
             message_thread_id=thread_id,
         )
+        logger.info(
+            "Event message sent", chat_id=update.effective_chat.id, thread_id=thread_id
+        )
 
     database.commit()
     database.close()
+    logger.debug("Database connection closed")
 
 
 async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza hora command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -79,6 +108,11 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
         hora = context.args[1]
 
         if str(update.message.from_user.username) in admins:
+            logger.info(
+                "User authorized to change event time",
+                user=update.message.from_user.username,
+                date=fecha,
+            )
             database = sqlite3.connect("sqlite.db")
             cursor = database.cursor()
 
@@ -94,9 +128,21 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="Se ha modificado la hora del evento",
                     message_thread_id=thread_id,
                 )
+                logger.info("Event time updated", date=fecha, new_time=hora)
+        else:
+            logger.warning(
+                "User not authorized to change event time",
+                user=update.message.from_user.username,
+            )
 
 
 async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -110,6 +156,11 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lugar = context.args[1]
 
         if str(update.message.from_user.username) in admins:
+            logger.info(
+                "User authorized to change event location",
+                user=update.message.from_user.username,
+                date=fecha,
+            )
             database = sqlite3.connect("sqlite.db")
             cursor = database.cursor()
 
@@ -125,9 +176,21 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="Se ha modificado el lugar del evento",
                     message_thread_id=thread_id,
                 )
+                logger.info("Event location updated", date=fecha, new_location=lugar)
+        else:
+            logger.warning(
+                "User not authorized to change event location",
+                user=update.message.from_user.username,
+            )
 
 
 async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza mapa command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -141,6 +204,11 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mapa = context.args[1]
 
         if str(update.message.from_user.username) in admins:
+            logger.info(
+                "User authorized to change event map",
+                user=update.message.from_user.username,
+                date=fecha,
+            )
             database = sqlite3.connect("sqlite.db")
             cursor = database.cursor()
 
@@ -156,9 +224,21 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="Se ha modificado el mapa del evento",
                     message_thread_id=thread_id,
                 )
+                logger.info("Event map updated", date=fecha, new_map=mapa)
+        else:
+            logger.warning(
+                "User not authorized to change event map",
+                user=update.message.from_user.username,
+            )
 
 
 async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza asistencia command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -172,6 +252,11 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
         asistentes = int(context.args[1])
 
         if str(update.message.from_user.username) in admins:
+            logger.info(
+                "User authorized to change event attendance",
+                user=update.message.from_user.username,
+                date=fecha,
+            )
             database = sqlite3.connect("sqlite.db")
             cursor = database.cursor()
 
@@ -187,9 +272,23 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     text="Se ha modificado la asistencia del evento",
                     message_thread_id=thread_id,
                 )
+                logger.info(
+                    "Event attendance updated", date=fecha, new_attendance=asistentes
+                )
+        else:
+            logger.warning(
+                "User not authorized to change event attendance",
+                user=update.message.from_user.username,
+            )
 
 
 async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(
+        "Cerveza link command received",
+        user_id=update.effective_user.id if update.effective_user else None,
+        chat_id=update.effective_chat.id if update.effective_chat else None,
+    )
+
     admins = [line.strip() for line in open("admins.txt")]
     thread_id = update.message.message_thread_id if update.message else None
 
@@ -203,6 +302,11 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
         link = context.args[1]
 
         if str(update.message.from_user.username) in admins:
+            logger.info(
+                "User authorized to change event link",
+                user=update.message.from_user.username,
+                date=fecha,
+            )
             database = sqlite3.connect("sqlite.db")
             cursor = database.cursor()
 
@@ -218,3 +322,9 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="Se ha modificado el link del evento",
                     message_thread_id=thread_id,
                 )
+                logger.info("Event link updated", date=fecha, new_link=link)
+        else:
+            logger.warning(
+                "User not authorized to change event link",
+                user=update.message.from_user.username,
+            )
