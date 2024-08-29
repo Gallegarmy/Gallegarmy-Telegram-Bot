@@ -27,10 +27,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Convert repository and owner names to lowercase
+        id: names_lowercase
+        run: |
+          echo "REPO_NAME_LOWER=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "OWNER_NAME_LOWER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build Docker image
         run: |
-          docker buildx build --platform linux/amd64 -f .docker/Dockerfile -t ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest .
+          docker buildx build --platform linux/amd64 --load -f .docker/Dockerfile -t ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest .
 
       - name: Push Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          docker push ghcr.io/${{ env.OWNER_NAME_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest
