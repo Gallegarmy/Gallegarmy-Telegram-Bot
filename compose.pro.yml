@@ -27,6 +27,7 @@ services:
     restart: unless-stopped
 
   telegram-bot:
+    image: ghcr.io/gallegarmy/gallegarmy-telegram-bot:latest
     build:
       context: .
       dockerfile: .docker/Dockerfile
