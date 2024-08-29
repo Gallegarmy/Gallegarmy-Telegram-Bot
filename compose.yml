@@ -1,13 +1,18 @@
-version: '3.8'
+volumes:
+  db_data:
+
+networks:
+  karma_net:
+    driver: bridge
 
 services:
   db:
     image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: gallegarmy
-      MYSQL_DATABASE: karma_db
-      MYSQL_USER: sysarmy
-      MYSQL_PASSWORD: gallegarmy
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -16,25 +21,20 @@ services:
     restart: unless-stopped
 
   telegram-bot:
+    image: ghcr.io/gallegarmy/gallegarmy-telegram-bot:latest
     build:
       context: .
       dockerfile: .docker/Dockerfile
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-      - MYSQL_HOST=db
-      - MYSQL_PORT=3306
-      - MYSQL_DATABASE=karma_db
-      - MYSQL_USER=sysarmy
-      - MYSQL_PASSWORD=gallegarmy
+      LOG_LEVEL: ${LOG_LEVEL}
+      BOT_TOKEN: ${BOT_TOKEN}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:
       - db
     networks:
       - karma_net
     restart: unless-stopped
-
-volumes:
-  db_data:
-
-networks:
-  karma_net:
-    driver: bridge

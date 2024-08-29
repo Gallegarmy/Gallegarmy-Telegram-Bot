@@ -14,7 +14,8 @@ dependencies = [
   "soupsieve>=2.6",
   "urllib3>=2.2.2",
   "requests>=2.32.3",
-  "mysql-connector-python>=9.0.0"
+  "mysql-connector-python>=9.0.0",
+  "structlog>=24.4.0",
 ]
 description = "A Telegram bot for the SysArmy Galicia group."
 name = "telegram-bot"

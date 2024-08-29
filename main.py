@@ -37,17 +37,34 @@ from telegram_bot.dinner import (
 import tracemalloc
 from dotenv import load_dotenv
 import os
+import structlog
+import logging
 
 tracemalloc.start()
 
+level = os.environ.get("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = getattr(logging, level)
+
+structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(LOG_LEVEL))
+logger = structlog.get_logger()
+
 
 def get_bot_token():
-    return os.environ["BOT_TOKEN"]
+    token = os.environ["BOT_TOKEN"]
+    logger.info("Bot token retrieved successfully")
+    return token
 
 
 def main():
+    logger.info("Starting the bot application")
+
+    # Load environment variables
+    load_dotenv()
+
     # Create an updater object with your bot's token
     application = ApplicationBuilder().token(get_bot_token()).build()
+
+    logger.info("Application built", token=get_bot_token())
 
     commands = {
         "beer": beer_taker,
@@ -78,26 +95,29 @@ def main():
 
     for comm_string, funct in commands.items():
         application.add_handler(CommandHandler(comm_string, funct))
+        logger.info("Command registered", command=comm_string, handler=funct.__name__)
 
-    # Exemplo minimo de teclado
-    # TODO Mover ao dict de arriba
     application.add_handler(CommandHandler("teclado", show_dinner_keyboard))
+    logger.info(
+        "Command registered", command="teclado", handler=show_dinner_keyboard.__name__
+    )
 
     application.add_handler(
         CallbackQueryHandler(
             dinner_keyboard_handler,
         )
     )
+    logger.info("CallbackQueryHandler registered for dinner_keyboard_handler")
 
-    # Add a handler for the new member entering the chat
     application.add_handler(
         MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_members)
     )
+    logger.info("MessageHandler registered for new chat members")
 
-    # Start the Bot
+    logger.info("Starting bot polling")
     application.run_polling()
+    logger.info("Bot polling started successfully")
 
 
 if __name__ == "__main__":
-    load_dotenv()
     main()
