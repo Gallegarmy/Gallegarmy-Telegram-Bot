@@ -1,0 +1,44 @@
+### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
+### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
+### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
+### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
+### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
+
+volumes:
+  db_data:
+
+networks:
+  sysarmy:
+    driver: bridge
+
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: gallegarmy
+      MYSQL_DATABASE: karma_db
+      MYSQL_USER: sysarmy
+      MYSQL_PASSWORD: gallegarmy
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sysarmy
+    restart: unless-stopped
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=karma_db
+      - MYSQL_USER=sysarmy
+      - MYSQL_PASSWORD=gallegarmy
+    depends_on:
+      - db
+    networks:
+      - sysarmy
+    restart: unless-stopped
