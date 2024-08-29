@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS `karma` (
+    id      INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    word    TEXT NOT NULL,
+    karma   INT DEFAULT 0,
+    is_user BOOLEAN DEFAULT FALSE
+);
