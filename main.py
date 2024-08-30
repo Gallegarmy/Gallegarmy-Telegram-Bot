@@ -6,6 +6,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
+from telegram_bot.quote import add_quote, random_quote
 from telegram_bot.start import start
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
@@ -69,7 +70,7 @@ def main():
     commands = {
         "beer": beer_taker,
         "dinner": dinner_taker,
-        "cerveza": cerveza,
+        "events": cerveza,
         "cervezahora": cerveza_hora,
         "cervezaasistencia": cerveza_asistencia,
         "cervezalugar": cerveza_lugar,
@@ -87,6 +88,8 @@ def main():
         "orderchange": remove_item_order,
         "pineapple": pinacolada,
         "pricechange": change_price,
+        "qadd": add_quote,
+        "q": random_quote,
         "roundOrder": round_order,
         "start": start,
         "startdinner": start_dinner,

@@ -3,6 +3,9 @@ from telegram.ext import ContextTypes
 import sqlite3
 from datetime import timedelta, datetime
 import structlog
+import os
+import mysql.connector
+from datetime import datetime
 
 logger = structlog.get_logger()
 
@@ -40,20 +43,25 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         target_date = first_friday_of_month(current_year, current_month)
 
-    formatted_date = target_date.strftime("%d-%m-%Y")
+    formatted_date = target_date.strftime("%Y-%m-%d")
     logger.debug("Target date determined", target_date=formatted_date)
 
-    database = sqlite3.connect("sqlite.db")
+    database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+    )
     cursor = database.cursor()
 
-    SQLEvents = "SELECT * FROM events WHERE fecha = ?"
+    SQLEvents = "SELECT * FROM events WHERE date_event = %s"
     cursor.execute(SQLEvents, (formatted_date,))
     event = cursor.fetchone()
 
     if event is None:
         logger.info("No event found for date", date=formatted_date)
         SQLCreateEvent = (
-            "INSERT INTO events (fecha, hora, link, lugar, maps) VALUES (?, '19:00', "
+            "INSERT INTO events (date_event, time_event, link, place, maps) VALUES (%s, '19:00', "
             "'https://www.meetup.com/es-ES/gallegarmy/', "
             "'Fire Capitano (Rúa Federico García, 2, 15009 A Coruña)', "
             "'https://maps.app.goo.gl/ao8dejkwv74QV6eb7')"
@@ -67,10 +75,11 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         logger.info("New event created", date=formatted_date)
     else:
+        date, time, link,place, maps = event
         logger.info("Event found for date", date=formatted_date)
         event_message = (
-            f"Próximo evento de Admin Cañas:\n\nFecha: {event[0]}\n\nHora: {event[1]}\n\n"
-            f"Meetup: {event[2]}\n\nUbicación: {event[3]}\n\n{event[4]}"
+            f"Próximo evento de Admin Cañas:\n\nFecha: {date}\n\nHora: {time}\n\n"
+            f"Meetup: {link}\n\nUbicación: {place}\n\n{maps}"
         )
 
     if update.effective_chat:
@@ -113,10 +122,15 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = sqlite3.connect("sqlite.db")
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
-            SQLEvents = "UPDATE events SET hora = ? WHERE fecha = ?"
+            SQLEvents = "UPDATE events SET time_event = %s WHERE date_event = %s"
             cursor.execute(SQLEvents, (hora, fecha))
 
             database.commit()
@@ -161,10 +175,15 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = sqlite3.connect("sqlite.db")
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
-            SQLEvents = "UPDATE events SET lugar = ? WHERE fecha = ?"
+            SQLEvents = "UPDATE events SET place = ? WHERE date_event = ?"
             cursor.execute(SQLEvents, (lugar, fecha))
 
             database.commit()
@@ -209,10 +228,15 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = sqlite3.connect("sqlite.db")
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
-            SQLEvents = "UPDATE events SET maps = ? WHERE fecha = ?"
+            SQLEvents = "UPDATE events SET maps = ? WHERE date_event = ?"
             cursor.execute(SQLEvents, (mapa, fecha))
 
             database.commit()
@@ -257,10 +281,15 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = sqlite3.connect("sqlite.db")
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
-            SQLEvents = "UPDATE events SET asistentes = ? WHERE fecha = ?"
+            SQLEvents = "UPDATE events SET attendance = ? WHERE date_event = ?"
             cursor.execute(SQLEvents, (asistentes, fecha))
 
             database.commit()
@@ -307,10 +336,15 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = sqlite3.connect("sqlite.db")
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
-            SQLEvents = "UPDATE events SET link = ? WHERE fecha = ?"
+            SQLEvents = "UPDATE events SET link = ? WHERE date_event = ?"
             cursor.execute(SQLEvents, (link, fecha))
 
             database.commit()
