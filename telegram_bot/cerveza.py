@@ -10,17 +10,6 @@ from datetime import datetime
 logger = structlog.get_logger()
 
 
-
-connection_pool = mysql.connector.pooling.MySQLConnectionPool(
-        pool_name="my_pool",
-        pool_size=5,
-        pool_reset_session=True,
-        host=os.environ.get('MYSQL_HOST'),
-        user=os.environ.get('MYSQL_USER'),
-        password=os.environ.get('MYSQL_PASSWORD'),
-        database=os.environ.get('MYSQL_DATABASE'),
-    )
-
 def first_friday_of_month(year, month):
     current_date = datetime(year, month, 1)
     first_day_of_month = current_date.weekday()
@@ -36,7 +25,6 @@ def first_friday_of_month(year, month):
 
 
 async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -58,7 +46,12 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     formatted_date = target_date.strftime("%Y-%m-%d")
     logger.debug("Target date determined", target_date=formatted_date)
 
-    database = connection_pool.get_connection()
+    database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+    )
     cursor = database.cursor()
 
     SQLEvents = "SELECT * FROM events WHERE date_event = %s"
@@ -105,7 +98,6 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza hora command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -130,7 +122,12 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = connection_pool.get_connection()
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
             SQLEvents = "UPDATE events SET time_event = %s WHERE date_event = %s"
@@ -154,7 +151,6 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -179,7 +175,12 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = connection_pool.get_connection()
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
             SQLEvents = "UPDATE events SET place = ? WHERE date_event = ?"
@@ -203,7 +204,6 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza mapa command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -228,7 +228,12 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = connection_pool.get_connection()
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
             SQLEvents = "UPDATE events SET maps = ? WHERE date_event = ?"
@@ -252,7 +257,6 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza asistencia command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -277,7 +281,12 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = connection_pool.get_connection()
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
             SQLEvents = "UPDATE events SET attendance = ? WHERE date_event = ?"
@@ -303,7 +312,6 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global connection_pool
     logger.info(
         "Cerveza link command received",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -328,7 +336,12 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user=update.message.from_user.username,
                 date=fecha,
             )
-            database = connection_pool.get_connection()
+            database = mysql.connector.connect(
+                host=os.environ.get('MYSQL_HOST'),
+                user=os.environ.get('MYSQL_USER'),
+                password=os.environ.get('MYSQL_PASSWORD'),
+                database=os.environ.get('MYSQL_DATABASE'),
+            )
             cursor = database.cursor()
 
             SQLEvents = "UPDATE events SET link = ? WHERE date_event = ?"
