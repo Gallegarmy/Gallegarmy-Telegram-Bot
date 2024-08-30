@@ -1,5 +1,4 @@
 import os
-
 import mysql.connector
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -360,7 +359,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     await context.bot.send_message(
                         chat_id=update.effective_chat.id,
-                        text=f"El Karma de {usuario.lower()} es {karma}",
+                        text=f"El Karma de {usuario.lower()} es {karma[0]}", #IGNORE THIS ERROR
                         message_thread_id=thread_id,
                     )
                     logger.info("Displayed karma for word", word=usuario.lower())
@@ -404,7 +403,7 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         for user in users:
             word, karma = user  # Correctly unpack the tuple
-            karma_list += f"{word} - {karma}\n"
+            karma_list += f"{word}: {karma}\n"
         logger.info("Top users with karma retrieved", users=users)
 
         karma_list += "\nPalabras con más karma:\n\n"
@@ -414,7 +413,7 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         for word in words:
             word_text, karma = word  # Correctly unpack the tuple
-            karma_list += f"{word_text} - {karma}\n"
+            karma_list += f"{word_text}: {karma}\n"
         logger.info("Top words with karma retrieved", words=words)
 
         karma_list += "\nUsuarios con menos karma:\n\n"
@@ -424,7 +423,7 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         for user in users:
             word, karma = user  # Correctly unpack the tuple
-            karma_list += f"{word} - {karma}\n"
+            karma_list += f"{word}: {karma}\n"
         logger.info("Bottom users with karma retrieved", users=users)
 
         karma_list += "\nPalabras con menos karma:\n\n"
@@ -434,7 +433,7 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         for word in words:
             word_text, karma = word  # Correctly unpack the tuple
-            karma_list += f"{word_text} - {karma}\n"
+            karma_list += f"{word_text}: {karma}\n"
         logger.info("Bottom words with karma retrieved", words=words)
 
         await context.bot.send_message(
