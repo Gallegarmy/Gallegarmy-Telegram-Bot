@@ -1,11 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-import sqlite3
 from datetime import timedelta, datetime
 import structlog
 import os
 import mysql.connector
-from datetime import datetime
 
 logger = structlog.get_logger()
 
@@ -47,10 +45,10 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.debug("Target date determined", target_date=formatted_date)
 
     database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+        host=os.environ.get("MYSQL_HOST"),
+        user=os.environ.get("MYSQL_USER"),
+        password=os.environ.get("MYSQL_PASSWORD"),
+        database=os.environ.get("MYSQL_DATABASE"),
     )
     cursor = database.cursor()
 
@@ -75,7 +73,7 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         logger.info("New event created", date=formatted_date)
     else:
-        date, time, link,place, maps = event
+        date, time, link, place, maps = event
         logger.info("Event found for date", date=formatted_date)
         event_message = (
             f"Próximo evento de Admin Cañas:\n\nFecha: {date}\n\nHora: {time}\n\n"
@@ -123,10 +121,10 @@ async def cerveza_hora(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 date=fecha,
             )
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
@@ -176,10 +174,10 @@ async def cerveza_lugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 date=fecha,
             )
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
@@ -229,10 +227,10 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 date=fecha,
             )
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
@@ -282,10 +280,10 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 date=fecha,
             )
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
@@ -337,10 +335,10 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 date=fecha,
             )
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
