@@ -51,10 +51,10 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         return
 
                     database = mysql.connector.connect(
-                        host=os.environ.get('MYSQL_HOST'),
-                        user=os.environ.get('MYSQL_USER'),
-                        password=os.environ.get('MYSQL_PASSWORD'),
-                        database=os.environ.get('MYSQL_DATABASE'),
+                        host=os.environ.get("MYSQL_HOST"),
+                        user=os.environ.get("MYSQL_USER"),
+                        password=os.environ.get("MYSQL_PASSWORD"),
+                        database=os.environ.get("MYSQL_DATABASE"),
                     )
                     cursor = database.cursor()
                     SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -108,10 +108,10 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
                 database = mysql.connector.connect(
-                    host=os.environ.get('MYSQL_HOST'),
-                    user=os.environ.get('MYSQL_USER'),
-                    password=os.environ.get('MYSQL_PASSWORD'),
-                    database=os.environ.get('MYSQL_DATABASE'),
+                    host=os.environ.get("MYSQL_HOST"),
+                    user=os.environ.get("MYSQL_USER"),
+                    password=os.environ.get("MYSQL_PASSWORD"),
+                    database=os.environ.get("MYSQL_DATABASE"),
                 )
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -190,10 +190,10 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         return
 
                     database = mysql.connector.connect(
-                        host=os.environ.get('MYSQL_HOST'),
-                        user=os.environ.get('MYSQL_USER'),
-                        password=os.environ.get('MYSQL_PASSWORD'),
-                        database=os.environ.get('MYSQL_DATABASE'),
+                        host=os.environ.get("MYSQL_HOST"),
+                        user=os.environ.get("MYSQL_USER"),
+                        password=os.environ.get("MYSQL_PASSWORD"),
+                        database=os.environ.get("MYSQL_DATABASE"),
                     )
                     cursor = database.cursor()
                     SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -248,10 +248,10 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
                 database = mysql.connector.connect(
-                    host=os.environ.get('MYSQL_HOST'),
-                    user=os.environ.get('MYSQL_USER'),
-                    password=os.environ.get('MYSQL_PASSWORD'),
-                    database=os.environ.get('MYSQL_DATABASE'),
+                    host=os.environ.get("MYSQL_HOST"),
+                    user=os.environ.get("MYSQL_USER"),
+                    password=os.environ.get("MYSQL_PASSWORD"),
+                    database=os.environ.get("MYSQL_DATABASE"),
                 )
                 cursor = database.cursor()
                 SQLUsers = "SELECT * FROM karma WHERE word = %s"
@@ -308,10 +308,10 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.debug("Show karma for user/word requested", target=usuario)
 
             database = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST'),
-                user=os.environ.get('MYSQL_USER'),
-                password=os.environ.get('MYSQL_PASSWORD'),
-                database=os.environ.get('MYSQL_DATABASE'),
+                host=os.environ.get("MYSQL_HOST"),
+                user=os.environ.get("MYSQL_USER"),
+                password=os.environ.get("MYSQL_PASSWORD"),
+                database=os.environ.get("MYSQL_DATABASE"),
             )
             cursor = database.cursor()
 
@@ -319,9 +319,9 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 usuario = usuario[1:]
                 SQLUsers = "SELECT karma FROM karma WHERE word = %s"
                 cursor.execute(SQLUsers, (usuario.lower(),))
-                karma = cursor.fetchone()
+                karma_result = cursor.fetchone()
 
-                if karma is None:
+                if karma_result is None:
                     SQLCreateuser = (
                         "INSERT INTO karma (word, karma, is_user) VALUES (%s, 0, true)"
                     )
@@ -333,6 +333,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         message_thread_id=thread_id,
                     )
                 else:
+                    (karma,) = karma_result
                     await context.bot.send_message(
                         chat_id=update.effective_chat.id,
                         text=f"El Karma de {usuario.lower()} es {karma}",
@@ -343,9 +344,9 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 usuario = usuario[1:]
                 SQLUsers = "SELECT karma FROM karma WHERE word = %s"
                 cursor.execute(SQLUsers, (usuario.lower(),))
-                karma = cursor.fetchone()
+                karma_result = cursor.fetchone()
 
-                if karma is None:
+                if karma_result is None:
                     SQLCreateuser = (
                         "INSERT INTO karma (word, karma, is_user) VALUES (%s, 0, false)"
                     )
@@ -357,9 +358,10 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         message_thread_id=thread_id,
                     )
                 else:
+                    (karma,) = karma_result
                     await context.bot.send_message(
                         chat_id=update.effective_chat.id,
-                        text=f"El Karma de {usuario.lower()} es {karma[0]}", #IGNORE THIS ERROR
+                        text=f"El Karma de {usuario.lower()} es {karma}",
                         message_thread_id=thread_id,
                     )
                     logger.info("Displayed karma for word", word=usuario.lower())
@@ -390,10 +392,10 @@ async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
         karma_list = "Usuarios con más karma:\n\n"
 
         database = mysql.connector.connect(
-            host=os.environ.get('MYSQL_HOST'),
-            user=os.environ.get('MYSQL_USER'),
-            password=os.environ.get('MYSQL_PASSWORD'),
-            database=os.environ.get('MYSQL_DATABASE'),
+            host=os.environ.get("MYSQL_HOST"),
+            user=os.environ.get("MYSQL_USER"),
+            password=os.environ.get("MYSQL_PASSWORD"),
+            database=os.environ.get("MYSQL_DATABASE"),
         )
         cursor = database.cursor()
 
