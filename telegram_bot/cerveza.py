@@ -246,7 +246,7 @@ async def cerveza_mapa(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text="Se ha modificado el mapa del evento",
-                    message_thread_id=thread_id,
+                    message_thread_id=thread_id if thread_id else None,
                 )
                 logger.info("Event map updated", date=fecha, new_map=mapa)
         else:
@@ -299,7 +299,7 @@ async def cerveza_asistencia(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text="Se ha modificado la asistencia del evento",
-                    message_thread_id=thread_id,
+                    message_thread_id=thread_id if thread_id else None,
                 )
                 logger.info(
                     "Event attendance updated", date=fecha, new_attendance=asistentes
@@ -354,7 +354,7 @@ async def cerveza_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text="Se ha modificado el link del evento",
-                    message_thread_id=thread_id,
+                    message_thread_id=thread_id if thread_id else None,
                 )
                 logger.info("Event link updated", date=fecha, new_link=link)
         else:
