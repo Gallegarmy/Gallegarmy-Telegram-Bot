@@ -52,7 +52,7 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     cursor = database.cursor()
 
-    SQLEvents = "SELECT * FROM events WHERE date_event = %s"
+    SQLEvents = "SELECT date_event, time_event, link, place, maps FROM events WHERE date_event = %s"
     cursor.execute(SQLEvents, (formatted_date,))
     event = cursor.fetchone()
 
