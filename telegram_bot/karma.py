@@ -341,7 +341,6 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     logger.info("Displayed karma for user", user=usuario.lower())
             else:
-                usuario = usuario[1:]
                 SQLUsers = "SELECT karma FROM karma WHERE word = %s"
                 cursor.execute(SQLUsers, (usuario.lower(),))
                 karma_result = cursor.fetchone()

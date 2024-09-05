@@ -76,7 +76,7 @@ async def cerveza(update: Update, context: ContextTypes.DEFAULT_TYPE):
         date, time, link, place, maps = event
         logger.info("Event found for date", date=formatted_date)
         event_message = (
-            f"Próximo evento de Admin Cañas:\n\nFecha: {date}\n\nHora: {time}\n\n"
+            f"Próximo evento de Admin Cañas:\n\nFecha: {str(date)[0:5]}\n\nHora: {time}\n\n"
             f"Meetup: {link}\n\nUbicación: {place}\n\n{maps}"
         )
 
