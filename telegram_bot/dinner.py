@@ -73,8 +73,7 @@ async def start_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
         and update.message.from_user
         and update.message.from_user.username in ADMINS
     ):
-        with open("menu.json", "r", encoding="utf-8") as archive:
-            menu = json.load(archive)
+        menu = load_menu_json()
 
         orderMessages = []
         for item in menu["Menu"]:
@@ -104,6 +103,12 @@ async def start_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
         hasDinnerStarted = True
 
 
+def load_menu_json():
+    with open("menu.json", "r", encoding="utf-8") as archive:
+        menu = json.load(archive)
+    return menu
+
+
 def find_menu_item(data, menu_item_id):
     itemName = None
     for item in data["Menu"]:
@@ -111,10 +116,6 @@ def find_menu_item(data, menu_item_id):
             itemName = item["Name"]
             break
     return itemName
-
-
-def is_quantity_in_range(quantity):
-    return 0 < quantity <= 5
 
 
 async def show_dinner_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -167,7 +168,13 @@ async def dinner_keyboard_handler(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global orderRound, fullOrder, hasDinnerStarted, beerOrder
+    """
+    Triggered by /beer and the beer button,
+    this assigns one beer to the user that triggered the event
+    :param update: the update
+    :param context: the context
+    """
+    global hasDinnerStarted, beerOrder
 
     logger.info(
         "Beer taker command received",
@@ -177,7 +184,7 @@ async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if hasDinnerStarted:
         if update and update.callback_query:
-            request_user = await get_user(update, context)
+            request_user = await get_user(update)
 
             beerOrder[request_user] += 1
             if update.effective_chat:
@@ -189,6 +196,11 @@ async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Triggered by /dinner and the dinner button, this adds a user to the dictionary as a dinnerTaker
+    :param update: the update
+    :param context: the context
+    """
     global fullOrder
 
     logger.info(
@@ -197,23 +209,18 @@ async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
 
-    request_user = await get_user(update, context)
+    request_user = await get_user(update)
     if request_user in fullOrder:
-        if update.effective_chat:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"O usuario {request_user} xa está rexistrado para cear.",
-                message_thread_id=await get_thread_id(update),
-            )
+        msg = f"O usuario {request_user} xa está rexistrado para cear."
     else:
-        fullOrder[request_user] = default_factory()
-        if update.effective_chat:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"Rexistrado o usuario {request_user} para a cea.",
-                message_thread_id=await get_thread_id(update),
-            )
+        msg = f"Rexistrado o usuario {request_user} para a cea."
 
+    if update.effective_chat:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=msg,
+            message_thread_id=await get_thread_id(update),
+        )
 
 @async_only_dinner_chat
 async def dinner_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -226,6 +233,12 @@ async def remove_item_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add):
+    """
+    Adds or removes something from the order for a specific user
+    :param update: the update
+    :param context: the context
+    :param add: True if the user want to add something to the order, False if he/she wants to remove something
+    """
     global fullOrder, hasDinnerStarted, orderRound
 
     logger.info(
@@ -241,6 +254,7 @@ async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add)
         and update.message.from_user.username not in ADMINS
     ):
         return
+
     thread_id = await get_thread_id(update)
     if hasDinnerStarted:
         if not context.args:
@@ -276,7 +290,7 @@ async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add)
                         )
                     return
 
-            request_user = await get_user(update, context)
+            request_user = await get_user(update)
 
             menu_item_id = context.args[0]
             if not menu_item_id.isnumeric():
@@ -326,6 +340,10 @@ async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add)
             return
 
 
+def is_quantity_in_range(quantity):
+    return 0 < quantity <= 5
+
+
 @async_only_dinner_chat
 async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global fullOrder, hasDinnerStarted, orderRound, beerOrder
@@ -348,8 +366,8 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             and update.message.from_user
             and update.message.from_user.username in ADMINS
         ):
-            if context.args:
-                category = str(context.args[0])
+            #if context.args:
+                #category = str(context.args[0])
                 totalbill = 0
                 totalbeer = 0
                 beeramount = 0
@@ -361,7 +379,7 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if (
                             item_id >= 100
                             and item_id < 200
-                            and category in ["bebidas", "bebidasypostres"]
+                            #and category in ["bebidas", "bebidasypostres"]
                         ):
                             if item_id in (103, 104, 105, 106):
                                 totalbeer += item_price * user_order[item_id]
@@ -370,27 +388,28 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         elif (
                             item_id >= 200
                             and item_id < 300
-                            and category in ["postres", "bebidasypostres"]
+                            #and category in ["postres", "bebidasypostres"]
                         ):
                             finalBill[user] += item_price * user_order[item_id]
                         else:
                             totalbill += item_price * user_order[item_id]
 
-                for key, value in beerOrder.items():
-                    beeramount += value
-                    if key not in finalBill:
-                        finalBill[key] = 0
-
-                if category in ["bebidas", "postres", "bebidasypostres"]:
-                    personaltotal = totalbill / len(fullOrder)
-                    for user in finalBill:
+                #if category in ["bebidas", "postres", "bebidasypostres"]:
+                personaltotal = totalbill / len(fullOrder)
+                for user in finalBill:
                         finalBill[user] += personaltotal
-                if category in ["bebidas", "bebidasypostres"]:
-                    if beeramount > 0:
-                        personalbeer = totalbeer / beeramount
+
+                for beer_user, beer_glasses in beerOrder.items():
+                    beeramount += beer_glasses
+                    if beer_user not in finalBill:
+                        finalBill[beer_user] = 0
+
+                #if category in ["bebidas", "bebidasypostres"]:
+                if beeramount > 0:
+                        beer_price = totalbeer / beeramount
                         for user in finalBill:
                             if user in beerOrder:
-                                finalBill[user] += personalbeer * beerOrder[user]
+                                finalBill[user] += beer_price * beerOrder[user]
 
                 billMessage = "\n".join(
                     [
@@ -409,33 +428,33 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if context.chat_data and "order_msg" in context.chat_data:
                     del context.chat_data["order_msg"]
                 hasDinnerStarted = False
-            else:
-                totalbill = 0
-                for user in fullOrder:
-                    user_order = fullOrder.get(user, {})
-                    finalBill[user] = 0
-                    for item_id in user_order:
-                        item_price = menu_prices.get(item_id, 0)
-                        totalbill += item_price * user_order[item_id]
+            #else:
+            #    totalbill = 0
+            #    for user in fullOrder:
+            #        user_order = fullOrder.get(user, {})
+            #        finalBill[user] = 0
+            #        for item_id in user_order:
+            #            item_price = menu_prices.get(item_id, 0)
+            #            totalbill += item_price * user_order[item_id]
 
-                personaltotal = totalbill / len(fullOrder)
-                for user in finalBill:
-                    finalBill[user] += personaltotal
+            #    personaltotal = totalbill / len(fullOrder)
+            #    for user in finalBill:
+            #        finalBill[user] += personaltotal
 
-                billMessage = "\n".join(
-                    [f"{key} - {value}€" for key, value in finalBill.items()]
-                )
-                if update.effective_message:
-                    await context.bot.send_message(
-                        chat_id=update.effective_message.chat_id,
-                        text=billMessage,
-                        message_thread_id=await get_thread_id(update),
-                    )
-                orderRound = defaultdict(int)
-                fullOrder = defaultdict(default_factory)
-                if context.chat_data and "order_msg" in context.chat_data:
-                    del context.chat_data["order_msg"]
-                hasDinnerStarted = False
+            #    billMessage = "\n".join(
+            #        [f"{key} - {value}€" for key, value in finalBill.items()]
+            #    )
+            #    if update.effective_message:
+            #        await context.bot.send_message(
+            #            chat_id=update.effective_message.chat_id,
+            #            text=billMessage,
+            #            message_thread_id=await get_thread_id(update),
+            #        )
+            #    orderRound = defaultdict(int)
+            #    fullOrder = defaultdict(default_factory)
+            #    if context.chat_data and "order_msg" in context.chat_data:
+            #        del context.chat_data["order_msg"]
+            #    hasDinnerStarted = False
 
 
 @async_only_dinner_chat
@@ -629,7 +648,7 @@ async def open_menu_file(update, context):
     return data
 
 
-async def get_user(update, context):
+async def get_user(update):
     logger.info(
         "Get user function called",
         user_id=update.effective_user.id if update.effective_user else None,
@@ -643,8 +662,7 @@ async def get_user(update, context):
 
     if user is None:
         if update.effective_chat:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
+            await update.effective_chat.send_message(
                 text="Necesítase un username ou nome en Telegram para interactuar co bot.",
                 message_thread_id=await get_thread_id(update),
             )
@@ -656,8 +674,7 @@ async def get_user(update, context):
         request_user = user.first_name
     else:
         if update.effective_chat:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
+            await update.effective_chat.send_message(
                 text="Necesítase un username ou nome en Telegram para interactuar co bot.",
                 message_thread_id=await get_thread_id(update),
             )
