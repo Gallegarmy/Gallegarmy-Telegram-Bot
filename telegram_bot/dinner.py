@@ -10,7 +10,7 @@ import structlog
 
 logger = structlog.get_logger()
 
-#FOOD_THREAD_ID = 4226
+FOOD_THREAD_ID = 4226
 
 
 def default_factory():
@@ -26,7 +26,7 @@ def async_only_dinner_chat(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if (
             update.effective_message
-            #and update.effective_message.message_thread_id == FOOD_THREAD_ID
+            and update.effective_message.message_thread_id == FOOD_THREAD_ID
         ):
             logger.info(
                 "Handling request in Food Topic thread",
