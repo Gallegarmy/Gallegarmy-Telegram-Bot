@@ -1,12 +1,12 @@
 import functools
 from contextlib import suppress
-
+import mysql.connector
 import telegram
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, Message
 from telegram.ext import ContextTypes
 import json
 from collections import defaultdict
-import structlog
+import structlog, os
 
 logger = structlog.get_logger()
 
@@ -175,24 +175,35 @@ async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: the context
     """
     global hasDinnerStarted, beerOrder
-
+    request_user = await get_user(update)
     logger.info(
         "Beer taker command received",
         user_id=update.effective_user.id if update.effective_user else None,
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
-
-    if hasDinnerStarted:
-        if update and update.callback_query:
-            request_user = await get_user(update)
-
-            beerOrder[request_user] += 1
-            if update.effective_chat:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"Agregado un vaso de cervexa para {request_user}",
-                    message_thread_id=await get_thread_id(update),
-                )
+    database = mysql.connector.connect(
+                        host=os.environ.get("MYSQL_HOST"),
+                        user=os.environ.get("MYSQL_USER"),
+                        password=os.environ.get("MYSQL_PASSWORD"),
+                        database=os.environ.get("MYSQL_DATABASE"),
+    )
+    cursor = database.cursor()
+    SQLCheckGlass = "SELECT * FROM order_table WHERE plate_id = %s AND user = %s"
+    cursor.execute(SQLCheckGlass, ("idplaceholder",request_user))
+    usuarios = cursor.fetchall()
+    if len(usuarios) == 0:
+        SQLInsertBeer = "INSERT INTO order_table (plate_id,user,amount) VALUES (%s,%s,1)"
+        cursor.execute(SQLInsertBeer, ("idplaceholder",request_user))
+    else:
+        SQLUpdateBeer = "UPDATE order_table SET amount = amount + 1 WHERE plate_id = %s AND user = %s"
+        cursor.execute(SQLUpdateBeer, ("idplaceholder",request_user))
+    database.commit()
+    database.close()
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Agregado un vaso de cervexa para {request_user}",
+        message_thread_id=await get_thread_id(update),
+    )
 
 
 async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -202,6 +213,7 @@ async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: the context
     """
     global fullOrder
+    
 
     logger.info(
         "Dinner taker command received",
@@ -210,9 +222,21 @@ async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     request_user = await get_user(update)
-    if request_user in fullOrder:
+    database = mysql.connector.connect(
+                        host=os.environ.get("MYSQL_HOST"),
+                        user=os.environ.get("MYSQL_USER"),
+                        password=os.environ.get("MYSQL_PASSWORD"),
+                        database=os.environ.get("MYSQL_DATABASE"),
+    )
+    cursor = database.cursor()
+    SQLUser = "SELECT * FROM order_table WHERE user = %s"
+    cursor.execute(SQLUser, (request_user,))
+    usuarios = cursor.fetchall()
+    if len(usuarios) > 0:
         msg = f"O usuario {request_user} xa está rexistrado para cear."
     else:
+        SQLInsertUser = "INSERT INTO order_table (plate_id,user,amount) VALUES (0,%s,0)"
+        cursor.execute(SQLInsertUser, (request_user,))
         msg = f"Rexistrado o usuario {request_user} para a cea."
 
     if update.effective_chat:
