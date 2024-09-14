@@ -368,8 +368,6 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             and update.message.from_user
             and update.message.from_user.username in ADMINS
         ):
-            # if context.args:
-            # category = str(context.args[0])
             totalbill = 0
             totalbeer = 0
             beeramount = 0
@@ -380,7 +378,6 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     item_price = menu_prices.get(item_id, 0)
                     if (
                         item_id >= 100 and item_id < 200
-                        # and category in ["bebidas", "bebidasypostres"]
                     ):
                         if item_id in (103, 104, 105, 106):
                             totalbeer += item_price * user_order[item_id]
@@ -388,13 +385,11 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             finalBill[user] += item_price * user_order[item_id]
                     elif (
                         item_id >= 200 and item_id < 300
-                        # and category in ["postres", "bebidasypostres"]
                     ):
                         finalBill[user] += item_price * user_order[item_id]
                     else:
                         totalbill += item_price * user_order[item_id]
 
-            # if category in ["bebidas", "postres", "bebidasypostres"]:
             personaltotal = totalbill / len(fullOrder)
             for user in finalBill:
                 finalBill[user] += personaltotal
@@ -404,7 +399,6 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if beer_user not in finalBill:
                     finalBill[beer_user] = 0
 
-            # if category in ["bebidas", "bebidasypostres"]:
             if beeramount > 0:
                 beer_price = totalbeer / beeramount
                 for user in finalBill:
@@ -429,33 +423,7 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if context.chat_data and "order_msg" in context.chat_data:
                 del context.chat_data["order_msg"]
             hasDinnerStarted = False
-        # else:
-        #    totalbill = 0
-        #    for user in fullOrder:
-        #        user_order = fullOrder.get(user, {})
-        #        finalBill[user] = 0
-        #        for item_id in user_order:
-        #            item_price = menu_prices.get(item_id, 0)
-        #            totalbill += item_price * user_order[item_id]
-
-        #    personaltotal = totalbill / len(fullOrder)
-        #    for user in finalBill:
-        #        finalBill[user] += personaltotal
-
-        #    billMessage = "\n".join(
-        #        [f"{key} - {value}€" for key, value in finalBill.items()]
-        #    )
-        #    if update.effective_message:
-        #        await context.bot.send_message(
-        #            chat_id=update.effective_message.chat_id,
-        #            text=billMessage,
-        #            message_thread_id=await get_thread_id(update),
-        #        )
-        #    orderRound = defaultdict(int)
-        #    fullOrder = defaultdict(default_factory)
-        #    if context.chat_data and "order_msg" in context.chat_data:
-        #        del context.chat_data["order_msg"]
-        #    hasDinnerStarted = False
+        
 
 
 @async_only_dinner_chat
