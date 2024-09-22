@@ -11,7 +11,7 @@ logger = structlog.get_logger()
 
 karmaLimit = defaultdict(int)
 last_cleared_date = None
-MAIN_CHAT_ID = 854298459
+CHAT_ID = -1001920687768
 
 
 def async_only_sysarmy_chat(func):
@@ -23,7 +23,7 @@ def async_only_sysarmy_chat(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if (
             update.effective_message
-            and update.effective_chat.id == MAIN_CHAT_ID
+            and update.effective_message.chat_id == CHAT_ID
         ):
             logger.info(
                 "Handling request in Sysarmy chat",
