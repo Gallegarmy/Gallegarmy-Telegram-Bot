@@ -5,13 +5,42 @@ from telegram.ext import ContextTypes
 from collections import defaultdict
 import datetime
 import structlog
+import functools
 
 logger = structlog.get_logger()
 
 karmaLimit = defaultdict(int)
 last_cleared_date = None
+MAIN_CHAT_ID = 854298459
 
 
+def async_only_sysarmy_chat(func):
+    """
+    Decorator to ensure requests are only handled in Sysarmy to avoid centryk exploits.
+    """
+
+    @functools.wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if (
+            update.effective_message
+            and update.effective_chat.id == MAIN_CHAT_ID
+        ):
+            logger.info(
+                "Handling request in Sysarmy chat",
+                user_id=update.effective_user.id if update.effective_user else None,
+                chat_id=update.effective_chat.id if update.effective_chat else None,
+            )
+            return await func(update, context)
+        else:
+            logger.warning(
+                "Request not in Sysarmy Chat",
+                user_id=update.effective_user.id if update.effective_user else None,
+                chat_id=update.effective_chat.id if update.effective_chat else None,
+            )
+
+    return wrapper
+
+@async_only_sysarmy_chat
 async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(
         "Karma up command received",
@@ -150,7 +179,7 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_id=update.effective_user.id if update.effective_user else None,
             )
 
-
+@async_only_sysarmy_chat
 async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(
         "Karma down command received",
@@ -293,7 +322,7 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_id=update.effective_user.id if update.effective_user else None,
             )
 
-
+@async_only_sysarmy_chat
 async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(
         "Karma show command received",
@@ -378,7 +407,7 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_id=update.effective_user.id if update.effective_user else None,
             )
 
-
+@async_only_sysarmy_chat
 async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(
         "Karma list command received",
