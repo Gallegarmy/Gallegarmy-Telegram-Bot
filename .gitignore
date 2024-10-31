@@ -2,6 +2,7 @@
 *venv/
 venv/
 *.pyc
+credentials.json
 .env
 __pycache__
 *.db
