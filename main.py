@@ -10,14 +10,7 @@ from telegram_bot.quote import add_quote, random_quote
 from telegram_bot.start import start
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
-from telegram_bot.cerveza import (
-    cerveza,
-    cerveza_hora,
-    cerveza_lugar,
-    cerveza_mapa,
-    cerveza_asistencia,
-    cerveza_link,
-)
+from telegram_bot.cerveza import events
 from telegram_bot.help import help
 from telegram_bot.pina import pinacolada
 from telegram_bot.fiestas import festivos
@@ -70,12 +63,7 @@ def main():
     commands = {
         "beer": beer_taker,
         "dinner": dinner_taker,
-        "events": cerveza,
-        "cervezahora": cerveza_hora,
-        "cervezaasistencia": cerveza_asistencia,
-        "cervezalugar": cerveza_lugar,
-        "cervezamapa": cerveza_mapa,
-        "cervezalink": cerveza_link,
+        "events": events,
         "enddinner": end_dinner,
         "festivos": festivos,
         "help": help,
