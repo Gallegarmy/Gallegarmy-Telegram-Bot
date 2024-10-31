@@ -13,10 +13,13 @@ from datetime import timezone
 
 logger = structlog.get_logger()
 
-API_KEY = 'AIzaSyAF4_kLvk-9jpAbAy8wTJQh9CqIoprqjGQ'
+
+EVENTBRITE_API = os.environ["EVENTBRITE_API"]
+EVENTBRITE_ORGANIZATION_ID = os.environ["EVENTBRITE_ORGANIZATION_ID"]
+EVENTBRITE_TOKEN = os.environ["EVENTBRITE_TOKEN"]
 
 def get_next_event() -> dict:
-    response = requests.get('https://www.eventbriteapi.com/v3/organizations/2454750791881/events/?time_filter=current_future', headers={'Authorization': f'Bearer {EVENTBRITE_TOKEN}'})
+    response = requests.get(f'https://www.eventbriteapi.com/v3/organizations/{EVENTBRITE_ORGANIZATION_ID}/events/?time_filter=current_future', headers={'Authorization': f'Bearer {EVENTBRITE_TOKEN}'})
     logger.debug(f"Request URL: {response.url}")
     if response.status_code == 200:
         events_result = response.json()
@@ -26,7 +29,7 @@ def get_next_event() -> dict:
         logger.error(f"Error retrieving events: {response.status_code} - {response.text}")
         event = {}
     return event
-EVENTBRITE_TOKEN = 'ZINI46G5T4GI3EIN5572'
+
 async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id if update.message else None
     logger.info(
@@ -34,13 +37,6 @@ async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id=update.effective_user.id if update.effective_user else None,
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
-
-    now_utc = datetime.now(timezone.utc) 
-    madrid_offset = timezone(timedelta(hours=1))
-    now_local = now_utc.astimezone(madrid_offset).isoformat(timespec='seconds')
-    print(now_local)
-
-    
 
     event = get_next_event()
         
