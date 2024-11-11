@@ -6,24 +6,25 @@ import structlog
 logger = structlog.get_logger()
 
 welcome_messages = [
-    "A wild @{username} appears!",
-    "Ok, 200 @{username}, welcome",
-    "Benvido @{username}",
-    "Bienvenido a la grieta del invocador, @{username}",
-    "You made it, @{username}!",
-    "Speak friend and enter, @{username}",
+    "A wild {username} appears!",
+    "Ok, 200 {username}, welcome",
+    "Benvido {username}",
+    "Bienvenido a la grieta del invocador, {username}",
+    "You made it, {username}!",
+    "Speak friend and enter, {username}",
 ]
 
 
 async def new_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message and update.message.new_chat_members:
         chat_id = update.message.chat_id
-        new_member = (
-            update.message.new_chat_members[0].username
-            if update.message.new_chat_members[0].username
-            else "Unknown"
-        )
-
+        if update.message.new_chat_members[0].username:
+            new_member = f"@{update.message.new_chat_members[0].username}"
+        elif update.message.new_chat_members[0].first_name:
+            new_member = update.message.new_chat_members[0].first_name
+        else:
+            new_member = "Unknown"
+            
         logger.info(
             "New member detected",
             user_id=update.message.new_chat_members[0].id,
