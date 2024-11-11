@@ -14,7 +14,7 @@ karmaLimit = defaultdict(int)
 last_cleared_date = None
 
 
-async def karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation):
+async def karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: str):
     global karmaLimit, last_cleared_date
     now = datetime.datetime.now()
     if last_cleared_date is None or now.date() > last_cleared_date:
