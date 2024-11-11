@@ -14,7 +14,7 @@ logger = structlog.get_logger()
 karmaLimit = defaultdict(int)
 last_cleared_date = None
 CHAT_ID = -1001920687768
-
+TEST_MODE = os.getenv("TEST_MODE") == "true"
 
 def async_only_sysarmy_chat(func):
     """
@@ -23,6 +23,9 @@ def async_only_sysarmy_chat(func):
 
     @functools.wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if TEST_MODE:
+            return await func(update, context)
+
         if (
             update.effective_message
             and update.effective_message.chat_id == CHAT_ID
