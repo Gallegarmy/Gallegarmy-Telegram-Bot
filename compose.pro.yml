@@ -6,6 +6,11 @@
 
 volumes:
   db_data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.2.2,nfsvers=4.2,rw,hard,intr,sync"
+      device: ":/mnt/storage0/docker/sysarmy_telegram"
 
 networks:
   sysarmy:
@@ -42,10 +47,10 @@ services:
       MYSQL_PORT: ${MYSQL_PORT}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}      
-      EVENTBRITE_ORGANIZATION_ID : ${EVENTBRITE_ORGANIZATION_ID}
-      EVENTBRITE_API : ${EVENTBRITE_API}
-      EVENTBRITE_TOKEN : ${EVENTBRITE_TOKEN}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      EVENTBRITE_ORGANIZATION_ID: ${EVENTBRITE_ORGANIZATION_ID}
+      EVENTBRITE_API: ${EVENTBRITE_API}
+      EVENTBRITE_TOKEN: ${EVENTBRITE_TOKEN}
     depends_on:
       - db
     networks:
