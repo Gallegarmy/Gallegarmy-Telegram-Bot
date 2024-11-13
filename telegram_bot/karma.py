@@ -54,7 +54,7 @@ async def karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: s
         last_cleared_date = now.date()
         logger.debug("Karma limits cleared", date=last_cleared_date)
 
-    executing_username = update.message.from_user.username  # TODO: Un usuario que execute karma e non teña username dara erro
+    executing_username = update.message.from_user.username  
     if update.message and update.message.from_user and update.effective_chat:
         thread_id = update.message.message_thread_id
 
@@ -65,12 +65,11 @@ async def karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: s
                 target_username = detected_user.username or detected_user.first_name
         elif context.args:
             target_username = str(context.args[0])
-        is_user = target_username[0] == '@'
-        target_username = target_username.lower().removeprefix('@')
 
 
         if target_username:
-            logger.debug("Karma for user requested", target_user=target_username)
+            is_user = target_username[0] == '@'
+            target_username = target_username.lower().removeprefix('@')
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
