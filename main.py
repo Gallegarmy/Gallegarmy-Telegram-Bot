@@ -56,7 +56,7 @@ def main():
     load_dotenv()
 
     # Create an updater object with your bot's token
-    application = ApplicationBuilder().token(get_bot_token()).build()
+    application = ApplicationBuilder().token(get_bot_token()).read_timeout(60).write_timeout(60).build()
 
     logger.info("Application built", token=get_bot_token())
 

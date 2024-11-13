@@ -1,3 +1,5 @@
+version: '3.8'
+
 volumes:
   db_data:
 
@@ -17,20 +19,29 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      EVENTBRITE_ORGANIZATION_ID : ${EVENTBRITE_ORGANIZATION_ID}
-      EVENTBRITE_API : ${EVENTBRITE_API}
-      EVENTBRITE_TOKEN : ${EVENTBRITE_TOKEN}
     volumes:
       - db_data:/var/lib/mysql
     networks:
       - karma_net
     restart: unless-stopped
+    env_file: .env  # Ensures db service reads from .env
 
   telegram-bot:
     image: ghcr.io/gallegarmy/gallegarmy-telegram-bot:latest
     build:
       context: .
       dockerfile: .docker/telegram_bot/Dockerfile
+      args:
+        LOG_LEVEL: ${LOG_LEVEL}
+        BOT_TOKEN: ${BOT_TOKEN}
+        MYSQL_HOST: ${MYSQL_HOST}
+        MYSQL_PORT: ${MYSQL_PORT}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        EVENTBRITE_ORGANIZATION_ID: ${EVENTBRITE_ORGANIZATION_ID}
+        EVENTBRITE_API: ${EVENTBRITE_API}
+        EVENTBRITE_TOKEN: ${EVENTBRITE_TOKEN}
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       BOT_TOKEN: ${BOT_TOKEN}
@@ -39,8 +50,12 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      EVENTBRITE_ORGANIZATION_ID: ${EVENTBRITE_ORGANIZATION_ID}
+      EVENTBRITE_API: ${EVENTBRITE_API}
+      EVENTBRITE_TOKEN: ${EVENTBRITE_TOKEN}
     depends_on:
       - db
     networks:
       - karma_net
     restart: unless-stopped
+    env_file: .env  # Ensures telegram-bot service reads from .env

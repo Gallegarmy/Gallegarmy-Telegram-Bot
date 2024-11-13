@@ -7,12 +7,14 @@ import datetime
 import structlog
 import functools
 
+from telegram_bot.utils.tgram_utils import get_user
+
 logger = structlog.get_logger()
 
 karmaLimit = defaultdict(int)
 last_cleared_date = None
 CHAT_ID = -1001920687768
-
+TEST_MODE = os.getenv("TEST_MODE") == "true"
 
 def async_only_sysarmy_chat(func):
     """
@@ -21,6 +23,9 @@ def async_only_sysarmy_chat(func):
 
     @functools.wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if TEST_MODE:
+            return await func(update, context)
+
         if (
             update.effective_message
             and update.effective_message.chat_id == CHAT_ID
@@ -40,6 +45,105 @@ def async_only_sysarmy_chat(func):
 
     return wrapper
 
+
+async def karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: str):
+    global karmaLimit, last_cleared_date
+    now = datetime.datetime.now()
+    if last_cleared_date is None or now.date() > last_cleared_date:
+        karmaLimit.clear()
+        last_cleared_date = now.date()
+        logger.debug("Karma limits cleared", date=last_cleared_date)
+
+    executing_username = update.message.from_user.username  
+    if update.message and update.message.from_user and update.effective_chat:
+        thread_id = update.message.message_thread_id
+
+        target_username = ''
+        if update.message.reply_to_message is not None:
+            detected_user = update.effective_message.reply_to_message.from_user
+            if detected_user:
+                target_username = detected_user.username or detected_user.first_name
+        elif context.args:
+            target_username = str(context.args[0])
+
+
+        if target_username:
+            is_user = target_username[0] == '@'
+            target_username = target_username.lower().removeprefix('@')
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Necesito un usuario para asignarlle/quitarlle karma",
+                message_thread_id=thread_id,
+            )
+            logger.warning(
+                "Karma command received without arguments",
+                user_id=update.effective_user.id if update.effective_user else None,
+            )
+            return None
+
+        if target_username == executing_username.lower():
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Non sexas tan egocéntrico tío",
+                message_thread_id=thread_id,
+            )
+            logger.warning(
+                "User tried to give/remove karma to themselves",
+                user=executing_username,
+            )
+            return None
+
+        if executing_username not in karmaLimit:
+            karmaLimit[executing_username] = 5
+
+        if karmaLimit[executing_username] == 0:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Xa non podes asignar/quitar máis karma hoxe",
+                message_thread_id=thread_id,
+            )
+            logger.info(
+                "Karma limit reached", user=executing_username
+            )
+            return None
+
+        database = mysql.connector.connect(
+            host=os.environ.get("MYSQL_HOST"),
+            user=os.environ.get("MYSQL_USER"),
+            password=os.environ.get("MYSQL_PASSWORD"),
+            database=os.environ.get("MYSQL_DATABASE"),
+        )
+        cursor = database.cursor()
+        SQLUsers = "SELECT * FROM karma WHERE word = %s"
+        cursor.execute(SQLUsers, (target_username,))
+        usuarios = cursor.fetchall()
+
+        if len(usuarios) == 0:
+            if operation == "add":
+                SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s, 1, %s)"
+                cursor.execute(SQLCreateuser, (target_username, is_user))
+                logger.info("New user created in karma database", user=target_username)
+            elif operation == "remove":
+                SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s, -1, %s)"
+                cursor.execute(SQLCreateuser, (target_username, is_user))
+                logger.info("New user created in karma database", user=target_username)
+        else:
+            if operation == "add":
+                SQLAddKarma = "UPDATE karma SET karma = karma + 1 WHERE word = %s"
+                cursor.execute(SQLAddKarma, (target_username,))
+                logger.info("Karma increased for user", user=target_username)
+            elif operation == "remove":
+                SQLAddKarma = "UPDATE karma SET karma = karma - 1 WHERE word = %s"
+                cursor.execute(SQLAddKarma, (target_username,))
+                logger.info("Karma decreased for user", user=target_username)
+
+        database.commit()
+        database.close()
+        karmaLimit[executing_username] -= 1
+        return [target_username, thread_id]
+    
+
 @async_only_sysarmy_chat
 async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(
@@ -48,136 +152,15 @@ async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
 
-    global karmaLimit, last_cleared_date
-    now = datetime.datetime.now()
-    if last_cleared_date is None or now.date() > last_cleared_date:
-        karmaLimit.clear()
-        last_cleared_date = now.date()
-        logger.debug("Karma limits cleared", date=last_cleared_date)
+    response_status = await karma(update, context, "add")
+    
+    if response_status is not None:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"+1 Karma para {response_status[0]}",
+            message_thread_id=response_status[1],
+        )
 
-    if update.message and update.message.from_user and update.effective_chat:
-        thread_id = update.message.message_thread_id
-        if context.args:
-            usuario = str(context.args[0])
-            if usuario[0] == "@":
-                usuario = usuario[1:]
-                logger.debug("Karma for user requested", target_user=usuario)
-
-                if usuario.lower() != str(update.message.from_user.username).lower():
-                    if update.message.from_user.username not in karmaLimit:
-                        karmaLimit[update.message.from_user.username] = 5
-
-                    if karmaLimit[update.message.from_user.username] == 0:
-                        await context.bot.send_message(
-                            chat_id=update.effective_chat.id,
-                            text="Xa non podes asignar máis karma hoxe",
-                            message_thread_id=thread_id,
-                        )
-                        logger.info(
-                            "Karma limit reached",
-                            user=update.message.from_user.username,
-                        )
-                        return
-
-                    database = mysql.connector.connect(
-                        host=os.environ.get("MYSQL_HOST"),
-                        user=os.environ.get("MYSQL_USER"),
-                        password=os.environ.get("MYSQL_PASSWORD"),
-                        database=os.environ.get("MYSQL_DATABASE"),
-                    )
-                    cursor = database.cursor()
-                    SQLUsers = "SELECT * FROM karma WHERE word = %s"
-                    cursor.execute(SQLUsers, (usuario.lower(),))
-                    usuarios = cursor.fetchall()
-
-                    if len(usuarios) == 0:
-                        SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,1, true)"
-                        cursor.execute(SQLCreateuser, (usuario.lower(),))
-                        logger.info(
-                            "New user created in karma database", user=usuario.lower()
-                        )
-                    else:
-                        SQLAddKarma = (
-                            "UPDATE karma SET karma = karma + 1 WHERE word = %s"
-                        )
-                        cursor.execute(SQLAddKarma, (usuario.lower(),))
-                        logger.info("Karma increased for user", user=usuario.lower())
-
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=f"+1 Karma para {usuario.lower()}",
-                        message_thread_id=thread_id,
-                    )
-                    database.commit()
-                    database.close()
-                    karmaLimit[update.message.from_user.username] -= 1
-                else:
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text="Non sexas tan egocéntrico tío",
-                        message_thread_id=thread_id,
-                    )
-                    logger.warning(
-                        "User tried to give karma to themselves",
-                        user=update.message.from_user.username,
-                    )
-            else:
-                if update.message.from_user.username not in karmaLimit:
-                    karmaLimit[update.message.from_user.username] = 5
-
-                if karmaLimit[update.message.from_user.username] == 0:
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text="Xa non podes asignar máis karma hoxe",
-                        message_thread_id=thread_id,
-                    )
-                    logger.info(
-                        "Karma limit reached", user=update.message.from_user.username
-                    )
-                    return
-
-                database = mysql.connector.connect(
-                    host=os.environ.get("MYSQL_HOST"),
-                    user=os.environ.get("MYSQL_USER"),
-                    password=os.environ.get("MYSQL_PASSWORD"),
-                    database=os.environ.get("MYSQL_DATABASE"),
-                )
-                cursor = database.cursor()
-                SQLUsers = "SELECT * FROM karma WHERE word = %s"
-                cursor.execute(SQLUsers, (usuario.lower(),))
-                usuarios = cursor.fetchall()
-
-                if len(usuarios) == 0:
-                    SQLCreateuser = (
-                        "INSERT INTO karma (word, karma, is_user) VALUES (%s,1, false)"
-                    )
-                    cursor.execute(SQLCreateuser, (usuario.lower(),))
-                    logger.info(
-                        "New word created in karma database", word=usuario.lower()
-                    )
-                else:
-                    SQLAddKarma = "UPDATE karma SET karma = karma + 1 WHERE word = %s"
-                    cursor.execute(SQLAddKarma, (usuario.lower(),))
-                    logger.info("Karma increased for word", word=usuario.lower())
-
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"+1 Karma a {usuario.lower()}",
-                    message_thread_id=thread_id,
-                )
-                database.commit()
-                database.close()
-                karmaLimit[update.message.from_user.username] -= 1
-        else:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="Necesito un usuario para asignarlle karma",
-                message_thread_id=thread_id,
-            )
-            logger.warning(
-                "Karma up command received without arguments",
-                user_id=update.effective_user.id if update.effective_user else None,
-            )
 
 @async_only_sysarmy_chat
 async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -187,140 +170,14 @@ async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
 
-    global karmaLimit, last_cleared_date
-    now = datetime.datetime.now()
-    if last_cleared_date is None or now.date() > last_cleared_date:
-        karmaLimit.clear()
-        last_cleared_date = now.date()
-        logger.debug("Karma limits cleared", date=last_cleared_date)
-
-    if update.message and update.message.from_user and update.effective_chat:
-        thread_id = update.message.message_thread_id
-        if context.args:
-            usuario = str(context.args[0])
-            if usuario[0] == "@":
-                usuario = usuario[1:]
-                logger.debug("Karma down for user requested", target_user=usuario)
-
-                if usuario.lower() != str(update.message.from_user.username).lower():
-                    if update.message.from_user.username not in karmaLimit:
-                        karmaLimit[update.message.from_user.username] = 5
-
-                    if karmaLimit[update.message.from_user.username] == 0:
-                        await context.bot.send_message(
-                            chat_id=update.effective_chat.id,
-                            text="Xa non podes asignar máis karma hoxe",
-                            message_thread_id=thread_id,
-                        )
-                        logger.info(
-                            "Karma limit reached",
-                            user=update.message.from_user.username,
-                        )
-                        return
-
-                    database = mysql.connector.connect(
-                        host=os.environ.get("MYSQL_HOST"),
-                        user=os.environ.get("MYSQL_USER"),
-                        password=os.environ.get("MYSQL_PASSWORD"),
-                        database=os.environ.get("MYSQL_DATABASE"),
-                    )
-                    cursor = database.cursor()
-                    SQLUsers = "SELECT * FROM karma WHERE word = %s"
-                    cursor.execute(SQLUsers, (usuario.lower(),))
-                    usuarios = cursor.fetchall()
-
-                    if len(usuarios) == 0:
-                        SQLCreateuser = "INSERT INTO karma (word, karma, is_user) VALUES (%s,-1, true)"
-                        cursor.execute(SQLCreateuser, (usuario.lower(),))
-                        logger.info(
-                            "New user created in karma database with negative karma",
-                            user=usuario.lower(),
-                        )
-                    else:
-                        SQLRemoveKarma = (
-                            "UPDATE karma SET karma = karma - 1 WHERE word = %s"
-                        )
-                        cursor.execute(SQLRemoveKarma, (usuario.lower(),))
-                        logger.info("Karma decreased for user", user=usuario.lower())
-
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=f"-1 Karma para {usuario.lower()}",
-                        message_thread_id=thread_id,
-                    )
-                    database.commit()
-                    database.close()
-                    karmaLimit[update.message.from_user.username] -= 1
-                else:
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text="Non sexas tan egocéntrico tío",
-                        message_thread_id=thread_id,
-                    )
-                    logger.warning(
-                        "User tried to decrease their own karma",
-                        user=update.message.from_user.username,
-                    )
-            else:
-                if update.message.from_user.username not in karmaLimit:
-                    karmaLimit[update.message.from_user.username] = 5
-
-                if karmaLimit[update.message.from_user.username] == 0:
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text="Xa non podes asignar máis karma hoxe",
-                        message_thread_id=thread_id,
-                    )
-                    logger.info(
-                        "Karma limit reached", user=update.message.from_user.username
-                    )
-                    return
-
-                database = mysql.connector.connect(
-                    host=os.environ.get("MYSQL_HOST"),
-                    user=os.environ.get("MYSQL_USER"),
-                    password=os.environ.get("MYSQL_PASSWORD"),
-                    database=os.environ.get("MYSQL_DATABASE"),
-                )
-                cursor = database.cursor()
-                SQLUsers = "SELECT * FROM karma WHERE word = %s"
-                cursor.execute(SQLUsers, (usuario.lower(),))
-                usuarios = cursor.fetchall()
-
-                if len(usuarios) == 0:
-                    SQLCreateuser = (
-                        "INSERT INTO karma (word, karma, is_user) VALUES (%s,-1, false)"
-                    )
-                    cursor.execute(SQLCreateuser, (usuario.lower(),))
-                    logger.info(
-                        "New word created in karma database with negative karma",
-                        word=usuario.lower(),
-                    )
-                else:
-                    SQLRemoveKarma = (
-                        "UPDATE karma SET karma = karma - 1 WHERE word = %s"
-                    )
-                    cursor.execute(SQLRemoveKarma, (usuario.lower(),))
-                    logger.info("Karma decreased for word", word=usuario.lower())
-
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"-1 Karma a {usuario.lower()}",
-                    message_thread_id=thread_id,
-                )
-                database.commit()
-                database.close()
-                karmaLimit[update.message.from_user.username] -= 1
-        else:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="Necesito un usuario para asignarlle karma",
-                message_thread_id=thread_id,
-            )
-            logger.warning(
-                "Karma down command received without arguments",
-                user_id=update.effective_user.id if update.effective_user else None,
-            )
+    response_status = await karma(update, context, "remove")
+    
+    if response_status is not None:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"-1 Karma para {response_status[0]}",
+            message_thread_id=response_status[1],
+        )
 
 @async_only_sysarmy_chat
 async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
