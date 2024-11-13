@@ -4,14 +4,6 @@
 ### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
 ### ASK @Nsttt TO REQUEST CHANGES TO THIS FILE###
 
-volumes:
-  db_data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=192.168.2.2,nfsvers=4.2,rw,hard,intr,sync"
-      device: ":/mnt/storage0/docker/sysarmy_telegram"
-
 networks:
   sysarmy:
     driver: bridge
@@ -30,7 +22,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql
+      - /docker-data/sysarmy:/var/lib/mysql
     networks:
       - sysarmy
     restart: unless-stopped
@@ -51,6 +43,7 @@ services:
       EVENTBRITE_ORGANIZATION_ID: ${EVENTBRITE_ORGANIZATION_ID}
       EVENTBRITE_API: ${EVENTBRITE_API}
       EVENTBRITE_TOKEN: ${EVENTBRITE_TOKEN}
+      TEST_MODE: ${TEST_MODE}
     depends_on:
       - db
     networks:
