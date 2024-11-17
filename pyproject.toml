@@ -20,6 +20,12 @@ dependencies = [
   "google-auth-oauthlib",
   "google-auth-httplib2",
   "google-api-python-client",
+  "faker>=33.0.0",
+  "kink>=0.8.1",
+  "pyyaml>=6.0.2",
+  "pytest>=8.3.3",
+  "pytest-asyncio>=0.24.0",
+  "telethon>=1.38.1",
 ]
 description = "A Telegram bot for the SysArmy Galicia group."
 name = "telegram-bot"

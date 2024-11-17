@@ -1,0 +1,7 @@
+# Run unit tests on core
+run-unit-tests:
+	uv run python -m unittest discover -s core -p '*_unit_test.py'
+
+# Run acceptance tests on core
+run-acceptance-tests:
+	uv run pytest
