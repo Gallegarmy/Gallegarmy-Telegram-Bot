@@ -6,7 +6,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from telegram_bot.quote import add_quote, random_quote
+from telegram_bot.quote import add_quote_handler, search_quote_handler
 from telegram_bot.start import start
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
@@ -14,7 +14,7 @@ from telegram_bot.cerveza import events
 from telegram_bot.help import help
 from telegram_bot.pina import pinacolada
 from telegram_bot.fiestas import festivos
-from telegram_bot.karma import kup, kdown, kshow, klist
+#from telegram_bot.karma import kup, kdown, kshow, klist
 from telegram_bot.dinner import (
     start_dinner,
     round_order,
@@ -67,17 +67,17 @@ def main():
         "enddinner": end_dinner,
         "festivos": festivos,
         "help": help,
-        "kup": kup,
-        "kdown": kdown,
-        "klist": klist,
-        "kshow": kshow,
+        #"kup": kup,
+        #"kdown": kdown,
+        #"klist": klist,
+        #"kshow": kshow,
         "menuchange": change_menu,
         "order": dinner_order,
         "orderchange": remove_item_order,
         "pineapple": pinacolada,
         "pricechange": change_price,
-        "qadd": add_quote,
-        "q": random_quote,
+        "qadd": add_quote_handler.add_quote,
+        "q": search_quote_handler.search_quote,
         "roundOrder": round_order,
         "start": start,
         "startdinner": start_dinner,
