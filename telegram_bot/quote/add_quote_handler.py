@@ -27,16 +27,18 @@ async def add_quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
         database.connect()
         cursor = database.execute("SELECT * FROM quotes WHERE quote = %s", (quoted_msg.text,))
         quotes = cursor.fetchall()
-
-        if not quotes:
+        log_text =  "Quote already exists"
+        chat_text =  "Xa existe a cita."
+        username = "Anonymous"
+        if not quotes:      
             username = quoted_msg.from_user.username if quoted_msg.from_user else "Anonymous"
             database.execute("INSERT INTO quotes (quote, user) VALUES (%s, %s)", (quoted_msg.text, username))
             database.commit()
-            logger.info("Quote added", quote=quoted_msg.text, user=username)
-            await messaging.send_message(chat_id, "Cita agregada.", thread_id)
-        else:
-            logger.info("Quote already exists", quote=quoted_msg.text)
-            await messaging.send_message(chat_id, "Xa existe a cita.", thread_id)
+            log_text =  "Quote added"
+            chat_text =  "Cita engadida."
+
+        logger.info(log_text, quote=quoted_msg.text, user=username)
+        await messaging.send_message(chat_id, chat_text, thread_id)
 
     except RuntimeError as err:
         await error_handler.handle_runtime_error(err, context, chat_id, thread_id)
