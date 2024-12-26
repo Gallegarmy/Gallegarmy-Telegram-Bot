@@ -1,4 +1,7 @@
 from typing import Optional
+import structlog
+
+logger = structlog.get_logger()
 
 class MessagingService:
     def __init__(self, bot):
@@ -12,3 +15,5 @@ class MessagingService:
                 text=text,
                 message_thread_id=thread_id,
             )
+        else:
+            logger.error("Message couldn't be sent. Chat id is None.")
