@@ -2,7 +2,7 @@ import mysql.connector
 import os
 import structlog
 
-class DbHandler():
+class DbHandler:
     def __init__(self):
         self.logger = structlog.get_logger()
         self.connection = None
@@ -13,6 +13,7 @@ class DbHandler():
         Establishes a connection to the database and handles any connection errors.
         """
         try:
+
             self.connection = mysql.connector.connect(
                 host=os.environ.get("MYSQL_HOST"),
                 user=os.environ.get("MYSQL_USER"),

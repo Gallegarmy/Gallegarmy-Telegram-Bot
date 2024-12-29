@@ -1,6 +1,6 @@
 import os
 from ..db.db_handler import DbHandler
-from ..db.karma_facade import update_karma
+from ..db.karma_facade import updatedb_karma, getdb_top3, getdb_user_karma, getdb_last3
 from ..utils.error_handler import ErrorHandler
 from ..utils.messaging import MessagingService
 from telegram import Update
@@ -19,11 +19,21 @@ logger = structlog.get_logger()
 ADD = 1
 REMOVE = -1
 
+
 async def kup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await handle_karma(update, context, "add")
 
+
 async def kdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await handle_karma(update, context, "remove")
+
+
+async def klist(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return await handle_karma(update, context, "list")
+
+
+async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return await handle_karma(update, context, "show")
 
 
 async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: str):
@@ -54,16 +64,23 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
         karma_op = ADD if operation == "add" else REMOVE
 
         username = target.lower().removeprefix('@')
-        new_karma = update_karma(username, karma_op, target.startswith('@'))
+        new_karma = updatedb_karma(username, karma_op, target.startswith('@'))
         karma_limit[user] -= 1
         await context.bot.send_message(chat_id=update.effective_chat.id,
                                        text=f"{target} karma updated: {new_karma}")
-
     elif operation == "list":
-        karma_summary = database.execute()
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=karma_summary)
+        karma_summary = "Usuarios con más karma:\n"
+        for row in getdb_top3():
+            word, karma = row.values()
+            karma_summary += f"{word}: {karma}\n"
 
+        karma_summary += "\nUsuarios con menos karma:\n"
+        for row in getdb_last3():
+            word, karma = row.values()
+            karma_summary += f"{word}: {karma}\n"
+
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=karma_summary)
     elif operation == "show":
-        target_karma = get_or_create_user_karma(target)
+        target_karma = getdb_user_karma(target.lstrip('@').lower())
         await context.bot.send_message(chat_id=update.effective_chat.id,
                                        text=f"Karma for {target}: {target_karma}")

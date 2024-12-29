@@ -6,7 +6,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from telegram_bot.karma.modify_karma import kup, kdown
+from telegram_bot.karma.modify_karma import kup, kdown, klist, kshow
 from telegram_bot.quote import add_quote_handler, search_quote_handler
 from telegram_bot.start import start
 from telegram_bot.status import ping
@@ -69,8 +69,8 @@ def main():
         "help": help,
         "kup": kup,
         "kdown": kdown,
-        #"klist": klist,
-        #"kshow": kshow,
+        "klist": klist,
+        "kshow": kshow,
         "menuchange": change_menu,
         "order": dinner_order,
         "orderchange": remove_item_order,
