@@ -1,4 +1,4 @@
-from ..db.db_handler import db_handler
+from ..db.db_handler import DbHandler
 from ..utils.error_handler import ErrorHandler
 from ..utils.messaging import MessagingService
 from telegram import Update, Message
@@ -18,7 +18,7 @@ async def add_quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id if update.effective_chat else None
     messaging = MessagingService(context.bot)
     error_handler = ErrorHandler()
-    database = db_handler()
+    database = DbHandler()
     if not quoted_msg:
         logger.warning("No message to quote", chat_id=chat_id, thread_id=thread_id)
         await messaging.send_message(chat_id, "Necesítase unha mensaxe para citar.", thread_id)

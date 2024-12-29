@@ -1,4 +1,4 @@
-from ..db.db_handler import db_handler
+from ..db.db_handler import DbHandler
 from ..utils.error_handler import ErrorHandler
 from ..utils.messaging import MessagingService
 from telegram import Update, Message
@@ -15,7 +15,7 @@ async def search_quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id if update.effective_chat else None
     messaging = MessagingService(context.bot)
     error_handler = ErrorHandler()
-    database = db_handler()
+    database = DbHandler()
     try:
         database.connect()
         if context.args and len(context.args) == 1:

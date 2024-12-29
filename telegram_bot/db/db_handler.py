@@ -2,7 +2,7 @@ import mysql.connector
 import os
 import structlog
 
-class db_handler:
+class DbHandler():
     def __init__(self):
         self.logger = structlog.get_logger()
         self.connection = None
@@ -25,7 +25,7 @@ class db_handler:
             self.logger.error("Failed to connect to the database", error=str(err))
             raise RuntimeError("Database connection failed") from err
 
-    def execute(self, query, params=None):
+    def execute(self, query: str, params=None):
         """
         Executes a given SQL query with optional parameters.
         """
