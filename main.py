@@ -79,8 +79,6 @@ def main():
         "orderchange": remove_item_order,
         "pineapple": pinacolada,
         "pricechange": change_price,
-        "qadd": add_quote_handler.add_quote,
-        "q": search_quote_handler.search_quote,
         "roundOrder": round_order,
         "start": start,
         "startdinner": start_dinner,
