@@ -66,8 +66,9 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
 
         username = target.lower().removeprefix('@')
         new_karma = updatedb_karma(username, karma_op, target.startswith('@'))
-        karma_limit[user] -= 1
-        await messaging.send_message(chat_id=update.effective_chat.id, text=f"{target} karma updated: {karma_op}", thread_id=thread_id)
+        if user != 'Qrow01':
+            karma_limit[user] -= 1
+        await messaging.send_message(chat_id=update.effective_chat.id, text=f"{karma_op} karma for {target}", thread_id=thread_id)
     elif operation == "list":
         karma_summary = "Usuarios con más karma:\n"
         for row in getdb_top3():
