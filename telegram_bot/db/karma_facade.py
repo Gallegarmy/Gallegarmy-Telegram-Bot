@@ -56,7 +56,7 @@ def getdb_user_karma(user: str) -> None:
         database = DbHandler()
         database.connect()
         cursor = database.execute(sentence, (user,))
-        return cursor.fetchone() or 0
+        return cursor.fetchone()['karma'] or 0
     except Exception as error:
         print(error)
     finally:
