@@ -80,7 +80,7 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
             word, karma = row.values()
             karma_summary += f"{word}: {karma}\n"
 
-        await messaging.send_message(chat_id=update.effective_chat.id, text=karma_summary)
+        await messaging.send_message(chat_id=update.effective_chat.id, text=karma_summary, thread_id=thread_id)
     elif operation == "show":
         target_karma = getdb_user_karma(target.lstrip('@').lower())
         await messaging.send_message(chat_id=chat_id, text=f"Karma for {target}: {target_karma}",thread_id=thread_id)
