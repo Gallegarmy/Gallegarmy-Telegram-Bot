@@ -3,6 +3,7 @@ from ..db.db_handler import DbHandler
 from ..db.karma_facade import updatedb_karma, getdb_top3, getdb_user_karma, getdb_last3
 from ..utils.error_handler import ErrorHandler
 from ..utils.messaging import MessagingService
+from ..utils.logger import logger
 from telegram import Update
 from telegram.ext import ContextTypes
 from collections import defaultdict
@@ -12,10 +13,6 @@ import logging
 
 karma_limit = defaultdict(lambda: 5)
 last_cleared_date = None
-level = os.environ.get("LOG_LEVEL", "INFO").upper()
-LOG_LEVEL = getattr(logging, level)
-structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(LOG_LEVEL))
-logger = structlog.get_logger()
 ADD = 1
 REMOVE = -1
 
@@ -60,14 +57,17 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
         if karma_limit[user] == 0:
             await messaging.send_message(chat_id, text="Karma limit reached for today.", thread_id=thread_id)
             return
+        
+        if user.lstrip('@').lower() == target.lstrip('@').lower():
+            await messaging.send_message(chat_id, text="Get over yourself.", thread_id=thread_id)
+            return
 
         karma_op = ADD if operation == "add" else REMOVE
 
         username = target.lower().removeprefix('@')
         new_karma = updatedb_karma(username, karma_op, target.startswith('@'))
         karma_limit[user] -= 1
-        await context.bot.send_message(chat_id=update.effective_chat.id,
-                                       text=f"{target} karma updated: {new_karma}")
+        await messaging.send_message(chat_id=update.effective_chat.id, text=f"{target} karma updated: {karma_op}", thread_id=thread_id)
     elif operation == "list":
         karma_summary = "Usuarios con más karma:\n"
         for row in getdb_top3():
@@ -79,8 +79,7 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
             word, karma = row.values()
             karma_summary += f"{word}: {karma}\n"
 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=karma_summary)
+        await messaging.send_message(chat_id=update.effective_chat.id, text=karma_summary)
     elif operation == "show":
         target_karma = getdb_user_karma(target.lstrip('@').lower())
-        await context.bot.send_message(chat_id=update.effective_chat.id,
-                                       text=f"Karma for {target}: {target_karma}")
+        await messaging.send_message(chat_id=chat_id, text=f"Karma for {target}: {target_karma}",thread_id=thread_id)
