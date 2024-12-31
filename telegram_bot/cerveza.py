@@ -46,7 +46,7 @@ async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Próximo evento de Sysarmy Galicia:\n\n"
                 f"{event['name'].get('text')}\n\n"
                 f"Fecha y Hora: {event_time}\n\n"
-                f"Meetup: '{event['url']}'\n\n"
+                f"Meetup: {event['url']}\n\n"
             )
             if update.effective_chat:
                 await context.bot.send_message(
