@@ -3,9 +3,6 @@ from telegram.ext import ContextTypes
 from datetime import timedelta, datetime
 import structlog
 import os, requests
-from google.oauth2 import service_account
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 from datetime import datetime
 from datetime import timezone
 
