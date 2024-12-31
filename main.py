@@ -6,7 +6,8 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from telegram_bot.quote import add_quote, random_quote
+from telegram_bot.karma.modify_karma import kup, kdown, klist, kshow
+from telegram_bot.db.db_handler import DbHandler
 from telegram_bot.start import start
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
@@ -14,7 +15,6 @@ from telegram_bot.cerveza import events
 from telegram_bot.help import help
 from telegram_bot.pina import pinacolada
 from telegram_bot.fiestas import festivos
-from telegram_bot.karma import kup, kdown, kshow, klist
 from telegram_bot.dinner import (
     start_dinner,
     round_order,
@@ -28,6 +28,7 @@ from telegram_bot.dinner import (
     dinner_keyboard_handler,
     dinner_taker,
 )
+from telegram_bot.utils.logger import logger
 import tracemalloc
 from dotenv import load_dotenv
 import os
@@ -36,11 +37,7 @@ import logging
 
 tracemalloc.start()
 
-level = os.environ.get("LOG_LEVEL", "INFO").upper()
-LOG_LEVEL = getattr(logging, level)
 
-structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(LOG_LEVEL))
-logger = structlog.get_logger()
 
 
 def get_bot_token():
@@ -53,7 +50,12 @@ def main():
     logger.info("Starting the bot application")
 
     # Load environment variables
-    load_dotenv()
+    load_dotenv()    
+
+    #Initialize the connection pool
+    DbHandler.initialize_pool(pool_size=10)
+
+    logger.info("Database connection pool initialized")
 
     # Create an updater object with your bot's token
     application = ApplicationBuilder().token(get_bot_token()).read_timeout(60).write_timeout(60).build()
@@ -76,8 +78,6 @@ def main():
         "orderchange": remove_item_order,
         "pineapple": pinacolada,
         "pricechange": change_price,
-        "qadd": add_quote,
-        "q": random_quote,
         "roundOrder": round_order,
         "start": start,
         "startdinner": start_dinner,

@@ -9,8 +9,6 @@ Comandos Karma:
 /kdown [usuario] - Quita uno de karma a un usuario
 /kshow [usuario] - Muestra el karma de un usuario
 /klist - Muestra un top de usuarios con más y menos karma
-/qadd - Se ejecuta respondiendo a un mensaje, añade ese mensaje a la tabla quotes
-/q (opcional)[usuario] - Muestra una quote al azar o 3 quotes al azar de un usuario
 Commandos de Menu:
 /startdinner - Inicia la cena habilitando a los usuarios a pedir
 /order [id_number] (Optional)[amount]- Ordena un item del menú
