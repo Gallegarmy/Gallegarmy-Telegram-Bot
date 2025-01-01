@@ -11,7 +11,7 @@ from telegram_bot.db.db_handler import DbHandler
 from telegram_bot.start import start
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
-from telegram_bot.cerveza import events
+from telegram_bot.events.events_handler import events
 from telegram_bot.help import help
 from telegram_bot.pina import pinacolada
 from telegram_bot.fiestas import festivos

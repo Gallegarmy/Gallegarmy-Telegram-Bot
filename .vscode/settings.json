@@ -1,3 +1,6 @@
 {
-    "python.analysis.typeCheckingMode": "standard"
+    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.extraPaths": [
+        "./telegram_bot/events"
+    ]
 }
