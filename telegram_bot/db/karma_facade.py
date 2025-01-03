@@ -1,4 +1,7 @@
 from telegram_bot.db.db_handler import DbHandler
+import structlog
+
+logger = structlog.get_logger()
 
 
 def updatedb_karma(target_user: str, karma_op: int, is_user: bool=False) -> None:
@@ -21,7 +24,7 @@ def updatedb_karma(target_user: str, karma_op: int, is_user: bool=False) -> None
         database.commit()
         return cursor.fetchone()
     except Exception as error:
-        print(error)
+        logger.error(error)
     finally:
         database.close()
 
@@ -34,7 +37,7 @@ def getdb_top3() -> None:
         cursor = database.execute(sentence, params=())
         return cursor.fetchall() or tuple()
     except Exception as error:
-        print(error)
+        logger.error(error)
     finally:
         database.close()
 
@@ -46,7 +49,7 @@ def getdb_last3() -> None:
         cursor = database.execute(sentence, params=())
         return cursor.fetchall() or tuple()
     except Exception as error:
-        print(error)
+        logger.error(error)
     finally:
         database.close()
 
@@ -56,9 +59,14 @@ def getdb_user_karma(user: str) -> None:
         database = DbHandler()
         database.connect()
         cursor = database.execute(sentence, (user,))
-        return cursor.fetchone().get('karma',0)
+        result = cursor.fetchone()
+        if result is None:
+            result = 0
+        else:
+            result = result.get('karma')
+        return result
     except Exception as error:
-        print(error)
+        logger.error(error)
     finally:
         database.close()
 
