@@ -1,5 +1,6 @@
 Commandos actualmente habilitados en el bot:
 /start - Mensaje de bienvenida
+/ping - Verificar la disponibilidad del bot
 /events - Informacion del proximo evento de admin cañas
 /pineapple - Un manjar tropical
 /help - Listado de comandos habilitados
@@ -9,6 +10,3 @@ Comandos Karma:
 /kdown [usuario] - Quita uno de karma a un usuario
 /kshow [usuario] - Muestra el karma de un usuario
 /klist - Muestra un top de usuarios con más y menos karma
-Commandos de Menu:
-/order [id_number] - Ordena un item del menú
-/beer - Agrega un vaso de cerveza a nombre de quien envió el comando (Se usa para dividir la cuenta, cortesía de @jjqrs)
