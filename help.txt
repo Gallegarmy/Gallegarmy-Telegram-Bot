@@ -1,4 +1,4 @@
-Commandos actualmente habilitados en el bot:
+Comandos actualmente habilitados en el bot:
 /start - Mensaje de bienvenida
 /ping - Verificar la disponibilidad del bot
 /events - Informacion del proximo evento de admin cañas
