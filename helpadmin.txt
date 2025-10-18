@@ -1,4 +1,4 @@
-Commandos actualmente habilitados en el bot:
+Comandos actualmente habilitados en el bot:
 /start - Mensaje de bienvenida
 /events - Informacion del proximo evento de admin cañas
 /pineapple - Un manjar tropical
