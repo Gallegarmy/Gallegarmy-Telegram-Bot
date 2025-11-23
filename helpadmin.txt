@@ -9,3 +9,4 @@ Comandos Karma:
 /kdown [usuario] - Quita uno de karma a un usuario
 /kshow [usuario] - Muestra el karma de un usuario
 /klist - Muestra un top de usuarios con más y menos karma
+/vigo - Hace un llamamiento a todos los miembros de vigo

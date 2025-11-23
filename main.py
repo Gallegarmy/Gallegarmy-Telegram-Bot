@@ -9,6 +9,7 @@ from telegram.ext import (
 from telegram_bot.karma.modify_karma import kup, kdown, klist, kshow
 from telegram_bot.db.db_handler import DbHandler
 from telegram_bot.start import start
+from telegram_bot.callout import vigo
 from telegram_bot.status import ping
 from telegram_bot.newmembers import new_members
 from telegram_bot.events.events_handler import events
@@ -82,6 +83,7 @@ def main():
         "start": start,
         "startdinner": start_dinner,
         "ping": ping,
+        "vigo": vigo,
     }
 
     for comm_string, funct in commands.items():
