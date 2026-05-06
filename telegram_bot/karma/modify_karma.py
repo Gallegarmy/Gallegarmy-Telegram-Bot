@@ -1,15 +1,9 @@
-import os
-from ..db.db_handler import DbHandler
 from ..db.karma_facade import updatedb_karma, getdb_top3, getdb_user_karma, getdb_last3
-from ..utils.error_handler import ErrorHandler
 from ..utils.messaging import MessagingService
-from ..utils.logger import logger
 from telegram import Update
 from telegram.ext import ContextTypes
 from collections import defaultdict
 import datetime
-import structlog
-import logging
 
 karma_limit = defaultdict(lambda: 5)
 last_cleared_date = None
@@ -33,11 +27,12 @@ async def kshow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await handle_karma(update, context, "show")
 
 
-async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, operation: str):
+async def handle_karma(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, operation: str
+):
     """Handles karma commands: add, remove, show, and list."""
     global karma_limit, last_cleared_date
     now = datetime.datetime.now()
-    error_handler = ErrorHandler()
 
     if last_cleared_date is None or now.date() > last_cleared_date:
         karma_limit.clear()
@@ -45,30 +40,39 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
     thread_id = update.message.message_thread_id if update.message else None
     chat_id = update.effective_chat.id if update.effective_chat else None
     messaging = MessagingService(context.bot)
-    database = DbHandler()
-    user = update.message.from_user.username
+    user = update.message.from_user.username if update.message else None
     target = context.args[0] if context.args else None
 
     if operation == "add" or operation == "remove":
         if not target or user == target:
-            await messaging.send_message(chat_id, text="Invalid target for karma operation.", thread_id=thread_id)
+            await messaging.send_message(
+                chat_id, text="Invalid target for karma operation.", thread_id=thread_id
+            )
             return
 
         if karma_limit[user] == 0:
-            await messaging.send_message(chat_id, text="Karma limit reached for today.", thread_id=thread_id)
+            await messaging.send_message(
+                chat_id, text="Karma limit reached for today.", thread_id=thread_id
+            )
             return
-        
-        if user.lstrip('@').lower() == target.lstrip('@').lower():
-            await messaging.send_message(chat_id, text="Get over yourself.", thread_id=thread_id)
+
+        if user.lstrip("@").lower() == target.lstrip("@").lower():
+            await messaging.send_message(
+                chat_id, text="Get over yourself.", thread_id=thread_id
+            )
             return
 
         karma_op = ADD if operation == "add" else REMOVE
 
-        username = target.lower().removeprefix('@')
-        new_karma = updatedb_karma(username, karma_op, target.startswith('@'))
-        if user != 'Qrow01':
+        username = target.lower().removeprefix("@")
+        updatedb_karma(username, karma_op, target.startswith("@"))
+        if user != "Qrow01":
             karma_limit[user] -= 1
-        await messaging.send_message(chat_id=update.effective_chat.id, text=f"{karma_op} karma for {target}", thread_id=thread_id)
+        await messaging.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"{karma_op} karma for {target}",
+            thread_id=thread_id,
+        )
     elif operation == "list":
         karma_summary = "Usuarios con más karma:\n"
         for row in getdb_top3():
@@ -80,7 +84,18 @@ async def handle_karma(update: Update, context: ContextTypes.DEFAULT_TYPE, opera
             word, karma = row.values()
             karma_summary += f"{word}: {karma}\n"
 
-        await messaging.send_message(chat_id=update.effective_chat.id, text=karma_summary, thread_id=thread_id)
+        await messaging.send_message(
+            chat_id=update.effective_chat.id, text=karma_summary, thread_id=thread_id
+        )
     elif operation == "show":
-        target_karma = getdb_user_karma(target.lstrip('@').lower())
-        await messaging.send_message(chat_id=chat_id, text=f"Karma for {target}: {target_karma}",thread_id=thread_id)
+        if not target:
+            await messaging.send_message(
+                chat_id, text="Invalid target for karma operation.", thread_id=thread_id
+            )
+            return
+        target_karma = getdb_user_karma(target.lstrip("@").lower())
+        await messaging.send_message(
+            chat_id=chat_id,
+            text=f"Karma for {target}: {target_karma}",
+            thread_id=thread_id,
+        )

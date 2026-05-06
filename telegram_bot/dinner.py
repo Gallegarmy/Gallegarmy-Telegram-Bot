@@ -111,6 +111,11 @@ def load_menu_json():
     return menu
 
 
+def refresh_menu_names(data):
+    global names
+    names = {int(obj["id"]): obj["Name"] for obj in data["Menu"]}
+
+
 def find_menu_item(data, menu_item_id):
     itemName = None
     for item in data["Menu"]:
@@ -185,16 +190,17 @@ async def beer_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     if hasDinnerStarted:
-        if update and update.callback_query:
-            request_user = await get_user(update)
+        request_user = await get_user(update)
+        if request_user is None:
+            return
 
-            beerOrder[request_user] += 1
-            if update.effective_chat:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"Agregado un vaso de cervexa para {request_user}",
-                    message_thread_id=await get_thread_id(update),
-                )
+        beerOrder[request_user] += 1
+        if update.effective_chat:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"Agregado un vaso de cervexa para {request_user}",
+                message_thread_id=await get_thread_id(update),
+            )
 
 
 async def dinner_taker(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -326,11 +332,12 @@ async def add_or_remove(update: Update, context: ContextTypes.DEFAULT_TYPE, add)
                     if orderRound[menu_item_id] <= 0:
                         del orderRound[menu_item_id]
 
-                if menu_item_id in fullOrder:
-                    fullOrder[request_user][menu_item_id] -= quantity
+                user_order = fullOrder.get(request_user)
+                if user_order and menu_item_id in user_order:
+                    user_order[menu_item_id] -= quantity
 
-                    if fullOrder[request_user][menu_item_id] <= 0:
-                        del fullOrder[request_user][menu_item_id]
+                    if user_order[menu_item_id] <= 0:
+                        del user_order[menu_item_id]
 
             await show_order(update, context)
             return
@@ -370,6 +377,15 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             and update.message.from_user
             and update.message.from_user.username in ADMINS
         ):
+            if not fullOrder:
+                if update.effective_message:
+                    await context.bot.send_message(
+                        chat_id=update.effective_message.chat_id,
+                        text="Non hai pedidos para pechar.",
+                        message_thread_id=await get_thread_id(update),
+                    )
+                return
+
             totalbill = 0
             totalbeer = 0
             beeramount = 0
@@ -378,16 +394,12 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 finalBill[user] = 0
                 for item_id in user_order:
                     item_price = menu_prices.get(item_id, 0)
-                    if (
-                        item_id >= 100 and item_id < 200
-                    ):
+                    if item_id >= 100 and item_id < 200:
                         if item_id in (103, 104, 105, 106):
                             totalbeer += item_price * user_order[item_id]
                         else:
                             finalBill[user] += item_price * user_order[item_id]
-                    elif (
-                        item_id >= 200 and item_id < 300
-                    ):
+                    elif item_id >= 200 and item_id < 300:
                         finalBill[user] += item_price * user_order[item_id]
                     else:
                         totalbill += item_price * user_order[item_id]
@@ -425,7 +437,6 @@ async def end_dinner(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if context.chat_data and "order_msg" in context.chat_data:
                 del context.chat_data["order_msg"]
             hasDinnerStarted = False
-        
 
 
 @async_only_dinner_chat
@@ -481,8 +492,7 @@ async def change_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
     thread_id = update.message.message_thread_id if update.message else None
-    f = open("menu.json")
-    data = json.load(f)
+    data = load_menu_json()
     if (
         update.message
         and update.message.from_user
@@ -491,12 +501,24 @@ async def change_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if context.args:
             if context.args[0].isnumeric():
                 if len(context.args) == 2:
+                    try:
+                        price = float(context.args[1])
+                    except ValueError:
+                        if update.effective_chat:
+                            await context.bot.send_message(
+                                chat_id=update.message.chat_id,
+                                text="O prezo debe ser un número válido.",
+                                message_thread_id=thread_id,
+                            )
+                        return
+
                     for item in data["Menu"]:
                         if item["id"] == int(context.args[0]):
-                            item["Price"] = float(context.args[1])
+                            item["Price"] = price
                             break
                     with open("menu.json", "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False)
+                        json.dump(data, f, ensure_ascii=False, indent=4)
+                    refresh_menu_names(data)
                     if update.effective_chat:
                         await context.bot.send_message(
                             chat_id=update.message.chat_id,
@@ -542,9 +564,9 @@ async def change_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if context.args[0].isnumeric():
                 item_id = int(context.args[0])
                 name = context.args[1]
-                price = context.args[2]
-
-                if not price.isnumeric():
+                try:
+                    price = float(context.args[2])
+                except ValueError:
                     if update.effective_chat:
                         await context.bot.send_message(
                             chat_id=update.effective_chat.id,
@@ -553,23 +575,22 @@ async def change_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         )
                     return
 
-                price = int(price)
-
                 item_updated = False
-                for item in data:
+                for item in data["Menu"]:
                     if item["id"] == item_id:
                         item.update({"Name": name, "Description": "", "Price": price})
                         item_updated = True
                         break
 
                 if not item_updated:
-                    data.append(
+                    data["Menu"].append(
                         {"id": item_id, "Name": name, "Description": "", "Price": price}
                     )
 
                 try:
                     with open("menu.json", "w", encoding="utf-8") as f:
                         json.dump(data, f, ensure_ascii=False, indent=4)
+                    refresh_menu_names(data)
                 except IOError:
                     if update.effective_chat:
                         await context.bot.send_message(
@@ -606,6 +627,8 @@ async def open_menu_file(update, context):
     try:
         with open("menu.json", "r", encoding="utf-8") as f:
             data = json.load(f)
+            if not isinstance(data, dict) or "Menu" not in data:
+                raise json.JSONDecodeError("Invalid menu format", "", 0)
     except json.JSONDecodeError as e:
         if update.effective_chat:
             await context.bot.send_message(
@@ -615,7 +638,5 @@ async def open_menu_file(update, context):
             )
         raise e
     except FileNotFoundError:
-        data = []
+        data = {"Menu": []}
     return data
-
-

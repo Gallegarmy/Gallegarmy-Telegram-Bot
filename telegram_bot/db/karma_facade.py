@@ -1,7 +1,7 @@
 from telegram_bot.db.db_handler import DbHandler
 
 
-def updatedb_karma(target_user: str, karma_op: int, is_user: bool=False) -> None:
+def updatedb_karma(target_user: str, karma_op: int, is_user: bool = False) -> None:
     database = DbHandler()
     try:
         database.connect()
@@ -38,8 +38,11 @@ def getdb_top3() -> None:
     finally:
         database.close()
 
+
 def getdb_last3() -> None:
-    sentence = r"SELECT word, karma FROM karma WHERE is_user = true ORDER BY karma ASC LIMIT 3"
+    sentence = (
+        r"SELECT word, karma FROM karma WHERE is_user = true ORDER BY karma ASC LIMIT 3"
+    )
     try:
         database = DbHandler()
         database.connect()
@@ -50,21 +53,15 @@ def getdb_last3() -> None:
     finally:
         database.close()
 
+
 def getdb_user_karma(user: str) -> None:
     try:
         sentence = r"SELECT karma FROM karma WHERE word = %s"
         database = DbHandler()
         database.connect()
         cursor = database.execute(sentence, (user,))
-        return cursor.fetchone()['karma'] or 0
+        return cursor.fetchone()["karma"] or 0
     except Exception as error:
         print(error)
     finally:
         database.close()
-
-
-
-
-
-
-
