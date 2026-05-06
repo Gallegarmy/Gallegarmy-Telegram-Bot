@@ -30,6 +30,7 @@ from telegram_bot.dinner import (
     dinner_taker,
 )
 from telegram_bot.utils.logger import logger
+from telegram_bot.steam import steam_game
 import tracemalloc
 from dotenv import load_dotenv
 import os
@@ -85,6 +86,7 @@ def main():
         "ping": ping,
         "vigo": vigo,
         "coruna": coruna,
+        "steam": steam_game
     }
 
     for comm_string, funct in commands.items():
