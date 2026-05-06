@@ -86,7 +86,7 @@ def main():
         "ping": ping,
         "vigo": vigo,
         "coruna": coruna,
-        "steam": steam_game
+        "steam": steam_game,
     }
 
     for comm_string, funct in commands.items():
