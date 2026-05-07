@@ -11,11 +11,6 @@ networks:
 services:
   db:
     image: ghcr.io/gallegarmy/gallegarmy-telegram-bot/mysql:8.0.39
-    build:
-      context: .
-      dockerfile: .docker/mysql/Dockerfile
-      args:
-        BASE_DIRECTORY: .docker
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -29,9 +24,6 @@ services:
 
   telegram-bot:
     image: ghcr.io/gallegarmy/gallegarmy-telegram-bot:latest
-    build:
-      context: .
-      dockerfile: .docker/telegram_bot/Dockerfile
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       BOT_TOKEN: ${BOT_TOKEN}
