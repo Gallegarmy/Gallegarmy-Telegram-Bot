@@ -1,4 +1,6 @@
-import logging, os, structlog
+import logging
+import os
+import structlog
 
 # Configuration of the logger
 level = os.environ.get("LOG_LEVEL", "INFO").upper()

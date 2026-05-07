@@ -1,5 +1,7 @@
 import structlog
 from .messaging import MessagingService
+
+
 class ErrorHandler:
     def __init__(self):
         self.logger = structlog.get_logger()
@@ -10,4 +12,8 @@ class ErrorHandler:
         """
         self.logger.error("Runtime error occurred", error=str(error))
         messaging = MessagingService(context.bot)
-        await messaging.send_message(chat_id, "Un erro inesperado ha ocorrido. Por favor, inténtao máis tarde.", thread_id)
+        await messaging.send_message(
+            chat_id,
+            "Un erro inesperado ha ocorrido. Por favor, inténtao máis tarde.",
+            thread_id,
+        )

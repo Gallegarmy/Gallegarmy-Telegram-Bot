@@ -24,7 +24,7 @@ async def new_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             new_member = update.message.new_chat_members[0].first_name
         else:
             new_member = "Unknown"
-            
+
         logger.info(
             "New member detected",
             user_id=update.message.new_chat_members[0].id,

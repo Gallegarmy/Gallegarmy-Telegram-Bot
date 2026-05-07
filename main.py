@@ -4,7 +4,9 @@ from telegram.ext import (
     MessageHandler,
     filters,
     CallbackQueryHandler,
+    ContextTypes,
 )
+from telegram.error import Conflict, NetworkError
 
 from telegram_bot.karma.modify_karma import kup, kdown, klist, kshow
 from telegram_bot.db.db_handler import DbHandler
@@ -34,35 +36,69 @@ from telegram_bot.steam import steam_game
 import tracemalloc
 from dotenv import load_dotenv
 import os
-import structlog
-import logging
 
 tracemalloc.start()
 
-
+REQUEST_TIMEOUT = 60
+GET_UPDATES_TIMEOUT = 30
 
 
 def get_bot_token():
-    token = os.environ["BOT_TOKEN"]
+    token = os.environ.get("BOT_TOKEN")
+    if not token:
+        raise RuntimeError("BOT_TOKEN is required")
     logger.info("Bot token retrieved successfully")
     return token
+
+
+async def handle_application_error(
+    update: object, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    error = context.error
+    if isinstance(error, NetworkError) and update is None:
+        logger.warning("Telegram polling network error", error=str(error))
+        return
+    if isinstance(error, Conflict) and update is None:
+        logger.error(
+            "Telegram polling conflict; another bot instance is using this token",
+            error=str(error),
+        )
+        return
+
+    logger.error(
+        "Unhandled Telegram bot error",
+        error=str(error),
+        update_type=type(update).__name__ if update is not None else None,
+    )
 
 
 def main():
     logger.info("Starting the bot application")
 
     # Load environment variables
-    load_dotenv()    
+    load_dotenv()
 
-    #Initialize the connection pool
+    # Initialize the connection pool
     DbHandler.initialize_pool(pool_size=10)
 
     logger.info("Database connection pool initialized")
 
     # Create an updater object with your bot's token
-    application = ApplicationBuilder().token(get_bot_token()).read_timeout(60).write_timeout(60).build()
+    application = (
+        ApplicationBuilder()
+        .token(get_bot_token())
+        .read_timeout(REQUEST_TIMEOUT)
+        .write_timeout(REQUEST_TIMEOUT)
+        .connect_timeout(REQUEST_TIMEOUT)
+        .pool_timeout(REQUEST_TIMEOUT)
+        .get_updates_read_timeout(GET_UPDATES_TIMEOUT)
+        .get_updates_write_timeout(GET_UPDATES_TIMEOUT)
+        .get_updates_connect_timeout(GET_UPDATES_TIMEOUT)
+        .get_updates_pool_timeout(GET_UPDATES_TIMEOUT)
+        .build()
+    )
 
-    logger.info("Application built", token=get_bot_token())
+    logger.info("Application built")
 
     commands = {
         "beer": beer_taker,
@@ -92,6 +128,9 @@ def main():
     for comm_string, funct in commands.items():
         application.add_handler(CommandHandler(comm_string, funct))
         logger.info("Command registered", command=comm_string, handler=funct.__name__)
+
+    application.add_error_handler(handle_application_error)
+    logger.info("Application error handler registered")
 
     application.add_handler(CommandHandler("teclado", show_dinner_keyboard))
     logger.info(

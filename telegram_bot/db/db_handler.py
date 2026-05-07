@@ -1,31 +1,59 @@
 import mysql.connector
 from mysql.connector.pooling import MySQLConnectionPool
 import os
+import time
+
 import structlog
 
+
+def _get_mysql_port(logger):
+    raw_port = os.environ.get("MYSQL_PORT", "3306")
+    try:
+        return int(raw_port)
+    except ValueError:
+        logger.warning("Invalid MYSQL_PORT; falling back to 3306", mysql_port=raw_port)
+        return 3306
+
+
 class DbHandler:
-    _pool = None 
+    _pool = None
 
     @staticmethod
-    def initialize_pool(pool_size=10):
+    def initialize_pool(pool_size=10, retries=12, retry_delay=5):
         """
         Initializes the connection pool. This should be called once when the application starts.
         """
         if not DbHandler._pool:
-            try:
-                DbHandler._pool = MySQLConnectionPool(
-                    pool_name="db_pool",
-                    pool_size=pool_size,
-                    pool_reset_session=True,
-                    host=os.environ.get("MYSQL_HOST"),
-                    user=os.environ.get("MYSQL_USER"),
-                    password=os.environ.get("MYSQL_PASSWORD"),
-                    database=os.environ.get("MYSQL_DATABASE"),
-                )
-                structlog.get_logger().info("Connection pool initialized", pool_size=pool_size)
-            except mysql.connector.Error as err:
-                structlog.get_logger().error("Failed to initialize connection pool", error=str(err))
-                raise RuntimeError("Connection pool initialization failed") from err
+            logger = structlog.get_logger()
+            port = _get_mysql_port(logger)
+            last_error = None
+            for attempt in range(1, retries + 1):
+                try:
+                    DbHandler._pool = MySQLConnectionPool(
+                        pool_name="db_pool",
+                        pool_size=pool_size,
+                        pool_reset_session=True,
+                        host=os.environ.get("MYSQL_HOST"),
+                        port=port,
+                        user=os.environ.get("MYSQL_USER"),
+                        password=os.environ.get("MYSQL_PASSWORD"),
+                        database=os.environ.get("MYSQL_DATABASE"),
+                        connection_timeout=10,
+                    )
+                    logger.info("Connection pool initialized", pool_size=pool_size)
+                    return
+                except mysql.connector.Error as err:
+                    last_error = err
+                    logger.warning(
+                        "Database connection pool initialization failed; retrying",
+                        attempt=attempt,
+                        retries=retries,
+                        error=str(err),
+                    )
+                    time.sleep(retry_delay)
+
+            logger.error("Failed to initialize connection pool", error=str(last_error))
+            raise RuntimeError("Connection pool initialization failed") from last_error
 
     def __init__(self):
         self.logger = structlog.get_logger()
@@ -56,7 +84,9 @@ class DbHandler:
             self.cursor.execute(query, params or ())
             return self.cursor
         except mysql.connector.Error as err:
-            self.logger.error("Query execution failed", query=query, params=params, error=str(err))
+            self.logger.error(
+                "Query execution failed", query=query, params=params, error=str(err)
+            )
             raise RuntimeError("Database query failed") from err
 
     def commit(self):

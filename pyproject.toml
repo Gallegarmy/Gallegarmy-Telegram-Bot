@@ -34,4 +34,5 @@ requires = ["hatchling"]
 [tool.uv]
 dev-dependencies = [
   "ruff>=0.6.2",
+  "pytest>=9.0.3",
 ]
