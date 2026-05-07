@@ -6,6 +6,15 @@ import time
 import structlog
 
 
+def _get_mysql_port(logger):
+    raw_port = os.environ.get("MYSQL_PORT", "3306")
+    try:
+        return int(raw_port)
+    except ValueError:
+        logger.warning("Invalid MYSQL_PORT; falling back to 3306", mysql_port=raw_port)
+        return 3306
+
+
 class DbHandler:
     _pool = None
 
@@ -16,6 +25,7 @@ class DbHandler:
         """
         if not DbHandler._pool:
             logger = structlog.get_logger()
+            port = _get_mysql_port(logger)
             last_error = None
             for attempt in range(1, retries + 1):
                 try:
@@ -24,7 +34,7 @@ class DbHandler:
                         pool_size=pool_size,
                         pool_reset_session=True,
                         host=os.environ.get("MYSQL_HOST"),
-                        port=int(os.environ.get("MYSQL_PORT", "3306")),
+                        port=port,
                         user=os.environ.get("MYSQL_USER"),
                         password=os.environ.get("MYSQL_PASSWORD"),
                         database=os.environ.get("MYSQL_DATABASE"),

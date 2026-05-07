@@ -18,7 +18,13 @@ async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     messaging = MessagingService(context.bot)
     event = get_next_event()
 
-    if event:
+    if event is None:
+        await messaging.send_message(
+            chat_id=chat_id,
+            text="Ocorreu un erro, contacte ao seu Sysadmin mais próximo",
+            thread_id=thread_id,
+        )
+    elif event:
         start_time = str(event["start"].get("local"))
         dt = datetime.fromisoformat(start_time)
         event_date = dt.strftime("%d/%m")
@@ -40,6 +46,6 @@ async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await messaging.send_message(
             chat_id=chat_id,
-            text="Ocorreu un erro, contacte ao seu Sysadmin mais próximo",
+            text="Non hai próximos eventos publicados agora mesmo.",
             thread_id=thread_id,
         )

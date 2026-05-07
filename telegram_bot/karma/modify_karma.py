@@ -1,5 +1,6 @@
 from ..db.karma_facade import updatedb_karma, getdb_top3, getdb_user_karma, getdb_last3
 from ..utils.messaging import MessagingService
+from ..utils.tgram_utils import get_user
 from telegram import Update
 from telegram.ext import ContextTypes
 from collections import defaultdict
@@ -40,13 +41,20 @@ async def handle_karma(
     thread_id = update.message.message_thread_id if update.message else None
     chat_id = update.effective_chat.id if update.effective_chat else None
     messaging = MessagingService(context.bot)
-    user = update.message.from_user.username if update.message else None
     target = context.args[0] if context.args else None
 
     if operation == "add" or operation == "remove":
+        user = await get_user(update)
         if not target or user == target:
             await messaging.send_message(
                 chat_id, text="Invalid target for karma operation.", thread_id=thread_id
+            )
+            return
+        if not user:
+            await messaging.send_message(
+                chat_id,
+                text="Necesítase un username ou nome en Telegram para interactuar co bot.",
+                thread_id=thread_id,
             )
             return
 

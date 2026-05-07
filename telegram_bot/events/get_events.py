@@ -7,12 +7,12 @@ from telegram_bot.utils.logger import logger
 EVENTBRITE_API = "https://www.eventbriteapi.com/v3"
 
 
-def get_next_event() -> dict:
+def get_next_event() -> dict | None:
     organization_id = os.environ.get("EVENTBRITE_ORGANIZATION_ID")
     token = os.environ.get("EVENTBRITE_TOKEN")
     if not organization_id or not token:
         logger.error("Eventbrite configuration is missing")
-        return {}
+        return None
 
     try:
         response = requests.get(
@@ -26,7 +26,7 @@ def get_next_event() -> dict:
         events_result = response.json()
     except (requests.RequestException, ValueError) as error:
         logger.error("Error retrieving events", error=str(error))
-        return {}
+        return None
 
     events = events_result.get("events", [])
     if not events:

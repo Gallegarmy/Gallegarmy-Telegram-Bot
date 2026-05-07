@@ -54,14 +54,18 @@ def getdb_last3() -> None:
         database.close()
 
 
-def getdb_user_karma(user: str) -> None:
+def getdb_user_karma(user: str) -> int:
     try:
         sentence = r"SELECT karma FROM karma WHERE word = %s"
         database = DbHandler()
         database.connect()
         cursor = database.execute(sentence, (user,))
-        return cursor.fetchone()["karma"] or 0
+        result = cursor.fetchone()
+        if result is None:
+            return 0
+        return result["karma"] or 0
     except Exception as error:
         print(error)
+        return 0
     finally:
         database.close()

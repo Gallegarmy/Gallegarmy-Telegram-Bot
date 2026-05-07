@@ -54,8 +54,19 @@ def test_get_next_event_start_in_future(monkeypatch):
     ), "Expected the event start time to be in the future."
 
 
-def test_get_next_event_returns_empty_dict_without_config(monkeypatch):
+def test_get_next_event_returns_none_without_config(monkeypatch):
     monkeypatch.delenv("EVENTBRITE_ORGANIZATION_ID", raising=False)
     monkeypatch.delenv("EVENTBRITE_TOKEN", raising=False)
+
+    assert get_next_event() is None
+
+
+def test_get_next_event_returns_empty_dict_without_events(monkeypatch):
+    def fake_get(*args, **kwargs):
+        return FakeResponse({"events": []})
+
+    monkeypatch.setenv("EVENTBRITE_ORGANIZATION_ID", "2454750791881")
+    monkeypatch.setenv("EVENTBRITE_TOKEN", "token")
+    monkeypatch.setattr("telegram_bot.events.get_events.requests.get", fake_get)
 
     assert get_next_event() == {}

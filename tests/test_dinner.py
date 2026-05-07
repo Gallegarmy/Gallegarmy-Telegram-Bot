@@ -5,7 +5,7 @@ def verify_response(expected_value: str, received_value: str) -> None:
     if received_value is None:
         print("No hay respuesta del bot")
     elif expected_value in received_value:
-        print("Test successfull, expected value is correct")
+        print("Test successful, expected value is correct")
     else:
         print(f"{expected_value} failed. Please review the logs")
 

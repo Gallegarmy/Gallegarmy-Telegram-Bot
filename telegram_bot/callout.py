@@ -18,7 +18,7 @@ async def vigo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ):
         await context.bot.send_message(
             chat_id=update.message.chat_id,
-            text=f"{construct_callout("Vigo")}",
+            text=construct_callout("Vigo"),
             message_thread_id=thread_id,
         )
 
@@ -47,7 +47,7 @@ async def coruna(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ):
         await context.bot.send_message(
             chat_id=update.message.chat_id,
-            text=f"{construct_callout("Coruña")}",
+            text=construct_callout("Coruña"),
             message_thread_id=thread_id,
         )
 
