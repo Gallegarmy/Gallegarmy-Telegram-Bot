@@ -3,6 +3,7 @@ import os
 import requests
 
 from telegram_bot.utils.logger import logger
+from .check_coruna_event import check_event
 
 EVENTBRITE_API = "https://www.eventbriteapi.com/v3"
 
@@ -33,4 +34,5 @@ def get_next_event() -> dict | None:
         logger.info("No future Eventbrite events found")
         return {}
 
-    return events[0]
+    next_event = check_event(events)
+    return next_event
