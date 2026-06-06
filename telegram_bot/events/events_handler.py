@@ -16,9 +16,15 @@ async def events(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id if update.effective_chat else None,
     )
     messaging = MessagingService(context.bot)
-    event = get_next_event()
+    if context.args:
+        city = context.args[0].lower()
+        logger.debug("Fetching events for city", city=city)
+        event = get_next_event(city)
+    else:
+        event = get_next_event()
 
-    if event is None:
+
+    if event is None or event == 'No event':
         await messaging.send_message(
             chat_id=chat_id,
             text="Ocorreu un erro, contacte ao seu Sysadmin mais próximo",

@@ -4,11 +4,12 @@ import requests
 
 from telegram_bot.utils.logger import logger
 from .check_coruna_event import check_event
+from .check_events_city import check_event_city
 
 EVENTBRITE_API = "https://www.eventbriteapi.com/v3"
 
 
-def get_next_event() -> dict | None:
+def get_next_event(city: str | None = None) -> dict | None:
     organization_id = os.environ.get("EVENTBRITE_ORGANIZATION_ID")
     token = os.environ.get("EVENTBRITE_TOKEN")
     if not organization_id or not token:
@@ -34,5 +35,8 @@ def get_next_event() -> dict | None:
         logger.info("No future Eventbrite events found")
         return {}
 
-    next_event = check_event(events)
+    if city:
+        next_event = check_event_city(events,city)
+    else:
+        next_event = check_event(events)
     return next_event
