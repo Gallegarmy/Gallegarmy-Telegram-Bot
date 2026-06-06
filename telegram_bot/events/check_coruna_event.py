@@ -7,7 +7,7 @@ def check_event(events):
         return events[0]
 
     current_event = events[0]
-    next_event = events [1]
+    next_event = events[1]
     current_event_name = current_event["name"]["text"].strip().lower()
     next_event_name = next_event["name"]["text"].strip().lower()
     current_event_month = datetime.fromisoformat(current_event["start"]["local"]).month
